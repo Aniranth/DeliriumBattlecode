@@ -68,26 +68,23 @@ public strictfp class RobotPlayer {
 
     static void runHQ() throws GameActionException {
         // Lets build a list of directions that are away from the edges of the map
-
         for (Direction dir : directions)
             tryBuild(RobotType.MINER, dir);
     }
 
     static void runMiner() throws GameActionException {
-        if (hqLocation == null)
-        {
+        if (hqLocation == null) {
             grabHQLocation();
         }
 
-        if (corner == -1)
-        {
+        if (corner == -1) {
             grabExploreDirections();
         }
         
         rc.setIndicatorDot(hqLocation, 255, 255, 255);
-        
-        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) // Lets return to base to deliver soup TODO: Decide closest refinery to deliver
-        {
+
+        //TODO: Decide closest refinery to deliver
+        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) { // Lets return to base to deliver soup
             Direction pathToHQ = rc.getLocation().directionTo(hqLocation);
 
             if (!rc.canDepositSoup(pathToHQ))
@@ -100,30 +97,25 @@ public strictfp class RobotPlayer {
                         System.out.println("Soup refined.");
             }
         }
-        else // We must find soup to mine
-        {
+        else { // We must find soup to mine (do we want to go back only when full or also when we deplete?)
             Direction maxSoupDir = null;
             int maxSoupCount = 0;
-            for (Direction dir : directions)
-            {
+            for (Direction dir : directions) {
                 int soupCount = rc.senseSoup(rc.adjacentLocation(dir));
-                if (soupCount > maxSoupCount)
-                {
+                if (soupCount > maxSoupCount) {
                     maxSoupDir = dir;
                     maxSoupCount = soupCount;
                 }
             }
             
-            if (maxSoupCount != 0)
-            {
+            if (maxSoupCount != 0) {
                 tryMine(maxSoupDir);
             }
-            else
-            {
-                // Based on where we start lets explore in the direction we have the most ability to explore. TODO: Better movement logic than just going
-                //diagonal.
-                switch (corner) //TODO: Make corner numbers enums
-                {
+            else {
+                // TODO: Better movement logic than just going
+                // Based on where we start lets explore in the direction we have the most ability to explore.
+                // diagonal.
+                switch (corner) { //TODO: Make corner numbers enums
                     case 0: tryMove(Direction.SOUTHEAST);
                             break;
                     case 1: tryMove(Direction.SOUTHWEST);
@@ -303,29 +295,31 @@ public strictfp class RobotPlayer {
 
     static void grabExploreDirections()
     {
-        System.out.println("Got here");
+        //System.out.println("Got here");
         int distanceToTopLeft = hqLocation.distanceSquaredTo(new MapLocation(0, rc.getMapHeight()));
         int distanceToTopRight = hqLocation.distanceSquaredTo(new MapLocation(rc.getMapWidth(), rc.getMapHeight()));
         int distanceToBottomLeft = hqLocation.distanceSquaredTo(new MapLocation(0, 0));
         int distanceToBottomRight = hqLocation.distanceSquaredTo(new MapLocation(rc.getMapWidth(), 0));
         
-        if (distanceToTopLeft <=  distanceToTopRight && distanceToTopLeft <= distanceToBottomLeft && distanceToTopLeft <= distanceToBottomRight)
-        {
+        if (distanceToTopLeft <=  distanceToTopRight &&
+                distanceToTopLeft <= distanceToBottomLeft &&
+                distanceToTopLeft <= distanceToBottomRight) {
             corner = 0;
             System.out.println("We are in the Top Left");
         }
-        else if (distanceToTopRight <= distanceToTopLeft && distanceToTopRight <= distanceToBottomLeft && distanceToTopRight <= distanceToBottomRight)
-        {
+        else if (distanceToTopRight <= distanceToTopLeft &&
+                distanceToTopRight <= distanceToBottomLeft &&
+                distanceToTopRight <= distanceToBottomRight) {
             corner = 1;
             System.out.println("We are in the Top Right");
         }
-        else if (distanceToBottomLeft <= distanceToTopLeft && distanceToBottomLeft <= distanceToTopRight && distanceToBottomLeft <= distanceToBottomRight)
-        {
+        else if (distanceToBottomLeft <= distanceToTopLeft &&
+                distanceToBottomLeft <= distanceToTopRight &&
+                distanceToBottomLeft <= distanceToBottomRight) {
             corner = 2;
             System.out.println("We are in the Bottom Left");
         }
-        else
-        {
+        else {
             corner = 3;
             System.out.println("We are in the Bottom Right");
         }
