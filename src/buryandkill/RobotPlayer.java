@@ -2,6 +2,11 @@ package buryandkill;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+
 public class RobotPlayer {
     static RobotController rc;
 
@@ -15,6 +20,13 @@ public class RobotPlayer {
             Direction.WEST,
             Direction.NORTHWEST
     };
+
+    static Direction[][] dir_box = {
+            {Direction.NORTHWEST, Direction.NORTH, Direction.NORTHEAST},
+            {Direction.WEST, Direction.CENTER, Direction.EAST},
+            {Direction.SOUTHWEST, Direction.SOUTH, Direction.SOUTHEAST}
+    };
+
     static RobotType[] spawnedByMiner = {RobotType.REFINERY, RobotType.VAPORATOR, RobotType.DESIGN_SCHOOL,
             RobotType.FULFILLMENT_CENTER, RobotType.NET_GUN};
 
@@ -115,8 +127,22 @@ public class RobotPlayer {
             tryBuild(RobotType.DELIVERY_DRONE, dir);
     }
 
-    static void pathTowards(MapLocation goal){
-        //TODO move us towards goal
+    static void pathTowards(MapLocation goal) throws GameActionException{
+        // + distance means goal is right/up. - distance means goal is left/down
+        int[] dir_as_int = new int[]{Integer.signum(goal.x - rc.getLocation().x), Integer.signum(goal.y - rc.getLocation().y)};
+        Direction move_dir = dir_box[dir_as_int[0] + 1][dir_as_int[1] + 1]; // 0 1 2; 0 1 2; 0 1 2
+        ArrayList<Direction> dir_list = new ArrayList<>(Arrays.asList(directions));
+        Collections.sort(dir_list, new Comparator<Direction>() {
+            @Override
+            public int compare(Direction o1, Direction o2) {
+                int x_gap1 = move_dir.getDeltaX() - o1.getDeltaX();
+                int x_gap2 = move_dir.getDeltaX() - o2.getDeltaX();
+                int y_gap1 = move_dir.getDeltaY() - o1.getDeltaY();
+                int y_gap2 = move_dir.getDeltaY() - o2.getDeltaY();
+                return (x_gap1*x_gap1 + y_gap1*y_gap1) - (x_gap2*x_gap2 + y_gap2*y_gap2); // score by distance vector length
+            }
+        });
+        for (Direction dir : dir_list) if(tryMove(dir)) break;
     }
 
     static boolean adjacentToEnemyHQ(){
@@ -221,7 +247,8 @@ public class RobotPlayer {
      */
     static boolean tryMove(Direction dir) throws GameActionException {
         // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
-        if (rc.isReady() && rc.canMove(dir)) {
+        // we can no longer kill ourselves without purposeful intent (if you wanna die, do it explicitly)
+        if (rc.isReady() && rc.canMove(dir) && !rc.senseFlooding(rc.adjacentLocation(dir))) {
             rc.move(dir);
             return true;
         } else return false;
