@@ -2,6 +2,7 @@ package buryandkill;
 
 import battlecode.common.*;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,8 +34,9 @@ public class RobotPlayer {
     static int turnCount;
 
     static RobotInfo enemy_HQ = null;
+    static RobotInfo my_HQ = null;
     static int num_factories = 0; // number of design schools built
-    static int desired_factories = 4; // number of factories we want
+    static int desired_factories = 2; // number of factories we want per miner
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -116,10 +118,15 @@ public class RobotPlayer {
 
     }
 
+    static final int DESIRED_LANDSCAPERS_PER_FACTORY = 2;
+    static int landscapers_built = 0;
     static void runDesignSchool() throws GameActionException {
+        if(landscapers_built > DESIRED_LANDSCAPERS_PER_FACTORY) return;
         System.out.println("RUSHRUSHRUSH");
         for (Direction dir : directions)
-            tryBuild(RobotType.LANDSCAPER, dir);
+            if(tryBuild(RobotType.LANDSCAPER, dir)){
+                landscapers_built++;
+            }
     }
 
     static void runFulfillmentCenter() throws GameActionException {
@@ -127,6 +134,7 @@ public class RobotPlayer {
             tryBuild(RobotType.DELIVERY_DRONE, dir);
     }
 
+    /*
     static void pathTowards(MapLocation goal) throws GameActionException{
         // + distance means goal is right/up. - distance means goal is left/down
         int[] dir_as_int = new int[]{Integer.signum(goal.x - rc.getLocation().x), Integer.signum(goal.y - rc.getLocation().y)};
@@ -144,11 +152,7 @@ public class RobotPlayer {
         });
         for (Direction dir : dir_list) if(tryMove(dir)) break;
     }
-
-    static boolean adjacentToEnemyHQ(){
-        //TODO are we adjacent to the enemy HQ?
-        return false;
-    }
+    */
 
     static void runLandscaper() throws GameActionException {
         // move randomly until we detect the enemy base
@@ -167,41 +171,116 @@ public class RobotPlayer {
         }
         if(enemy_HQ != null){
             tryMove(randomDirection());
-        } else if(!adjacentToEnemyHQ()){
-            pathTowards(enemy_HQ.getLocation());
+        } else if(!rc.getLocation().isAdjacentTo(enemy_HQ.getLocation())){
+            tryMove(rc.getLocation().directionTo(enemy_HQ.getLocation()));
         } else {
             if(rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit){
                 for (Direction dir : directions)
                     if (tryMine(dir)) {
                         System.out.println("Dirt acquired: " + rc.getDirtCarrying());
                     } else {
-                        Direction enemy_HQ = Direction.CENTER;//TODO make this actually point at the enemy
-                        rc.depositDirt(enemy_HQ);
+                        rc.depositDirt(rc.getLocation().directionTo(enemy_HQ.getLocation()));
                     }
             }
         }
 
     }
 
+    static boolean is_a(RobotType t, RobotType[] type_arr){
+        for(RobotType ty : type_arr){
+            if(t == ty) return true;
+        }
+        return false;
+    }
+
+    static final int MAX_HOMEGUARD = 5; // how many people want to guard home? (plus home base)
+    static Boolean station_to_defend = null;
+    static MapLocation dunk_zone = null;
+    static RobotInfo target = null;
+    static RobotType[] grabbables = new RobotType[]{RobotType.MINER, RobotType.LANDSCAPER};
+    static final int HOMEGUARD_DISTANCE = 4;
     static void runDeliveryDrone() throws GameActionException {
         Team enemy = rc.getTeam().opponent();
-        if (!rc.isCurrentlyHoldingUnit()) {
-            // See if there are any enemy robots within striking range (distance 1 from lumberjack's radius)
-            RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.DELIVERY_DRONE_PICKUP_RADIUS_SQUARED, enemy);
 
-            if (robots.length > 0) {
-                // Pick up a first robot within range
-                rc.pickUpUnit(robots[0].getID());
-                System.out.println("I picked up " + robots[0].getID() + "!");
+        /* priorities:
+         * If we are holding an enemy robot, we dunk it in the lake!
+         * If we see an enemy robot, we pick it up
+         * If we see our charge swarmed, swap charges
+         * If we see our charge, defend it
+         * If we see nothing, we search
+         */
+
+        RobotInfo[] scan = rc.senseNearbyRobots();
+        // my_HQ and enemy_HQ are the other important things
+        for(RobotInfo i : scan){
+            if(my_HQ == null && i.getTeam() != enemy && i.getType() == RobotType.HQ){
+                my_HQ = i;
+                station_to_defend = true;
+            } else if(enemy_HQ == null && i.getTeam() == enemy && i.getType() == RobotType.HQ){
+                enemy_HQ = i;
+                station_to_defend = false;
+            } else if(target == null && i.getTeam() == enemy && is_a(i.getType(), grabbables)){
+                target = i;
+            }
+        }
+
+        if (rc.isCurrentlyHoldingUnit()) {
+            if (dunk_zone == null) {
+                // scan all spaces in sensor radius for a lake
+                final int hbsl = 2; // half box side length
+                scan:
+                for (int y = -hbsl; y <= hbsl; y++) {
+                    for (int x = -hbsl; x <= hbsl; x++) {
+                        MapLocation sq_to_check = new MapLocation(rc.getLocation().x + x, rc.getLocation().y + y);
+                        if (rc.senseFlooding(sq_to_check)) {
+                            dunk_zone = sq_to_check;
+                            break scan;
+                        }
+                    }
+                }
+            }
+            if (dunk_zone == null) { // if it's still null
+                tryMove((randomDirection()));
+            } else if (rc.getLocation().isAdjacentTo(dunk_zone)) {
+                if(tryDrop(rc.getLocation().directionTo(dunk_zone))){
+                    target = null;
+                }
+            } else {
+                tryMove(rc.getLocation().directionTo(dunk_zone));
+            }
+        } else if(target != null) {
+            if(rc.canPickUpUnit(target.getID())){
+                rc.pickUpUnit(target.getID());
+            } else {
+                tryMove(rc.getLocation().directionTo(target.getLocation()));
+            }
+        } else if(station_to_defend != null) {
+            RobotInfo home = station_to_defend ? my_HQ : enemy_HQ;
+            if(home == null) {
+                tryMove((randomDirection())); // search for the other base
+            }
+            if(!rc.getLocation().isWithinDistanceSquared(home.getLocation(), HOMEGUARD_DISTANCE)){
+                tryMove(rc.getLocation().directionTo(home.getLocation()));
+            } else if(rc.senseNearbyRobots(HOMEGUARD_DISTANCE, rc.getTeam()).length > MAX_HOMEGUARD){
+                station_to_defend = !station_to_defend;
             }
         } else {
-            // No close robots, so search for robots within sight radius
-            tryMove(randomDirection());
+            // we have no idea where anything is, just drift
+            tryMove((randomDirection()));
         }
     }
 
     static void runNetGun() throws GameActionException {
-
+        // shoot anything that moves (from the enemy team)
+        RobotInfo[] scan = rc.senseNearbyRobots(rc.getCurrentSensorRadiusSquared(), rc.getTeam().opponent());
+        RobotInfo target = null;
+        for(RobotInfo i : scan){
+            if(rc.canShootUnit(i.getID())){
+                target = i;
+                break;
+            }
+        }
+        rc.shootUnit(target.getID());
     }
 
     /**
@@ -279,6 +358,13 @@ public class RobotPlayer {
     static boolean tryMine(Direction dir) throws GameActionException {
         if (rc.isReady() && rc.canMineSoup(dir)) {
             rc.mineSoup(dir);
+            return true;
+        } else return false;
+    }
+
+    static boolean tryDrop(Direction dir) throws GameActionException {
+        if(rc.isReady() && rc.canDropUnit(dir)){
+            rc.dropUnit(dir);
             return true;
         } else return false;
     }
