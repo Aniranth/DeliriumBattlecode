@@ -3,29 +3,13 @@ package qualsbot;
 
 import battlecode.common.*;
 
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-
 public class RobotPlayer {
     static RobotController rc;
 
-    static Direction[] directions = {
-            Direction.NORTH,
-            Direction.NORTHEAST,
-            Direction.EAST,
-            Direction.SOUTHEAST,
-            Direction.SOUTH,
-            Direction.SOUTHWEST,
-            Direction.WEST,
-            Direction.NORTHWEST
-    };
 
     public static void run(RobotController rc) throws GameActionException {
         RobotPlayer.rc = rc;
-        GameRobot r;
+        GameRobot r = null;
         int turnCount = 0;
 
         switch(rc.getType()) {
@@ -38,17 +22,18 @@ public class RobotPlayer {
             case LANDSCAPER:            r = new LandscaperBot(rc);          break;
             case DELIVERY_DRONE:        r = new DroneBot(rc);               break;
             case NET_GUN:               r = new NetBot(rc);                 break;
-            default:                    r = null;                           break;
         }
-        if(r == null) System.out.println("Failed to initialize");
-        try {
-            r.loop(++turnCount);
-            Clock.yield();
-        } catch (Exception e){
-            System.out.println("Exception caught: " + e.getMessage());
-            e.printStackTrace();
+        while(r != null) {
+            try {
+                r.loop(++turnCount);
+                Clock.yield();
+            } catch (Exception e) {
+                System.out.println("Exception caught: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
-
+        System.out.println("Failed to initialize");
+        while(true) Clock.yield(); // do nothing
     }
 
 }

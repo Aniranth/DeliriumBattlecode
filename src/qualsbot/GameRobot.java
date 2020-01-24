@@ -12,13 +12,17 @@ public abstract class GameRobot {
      * robot controller we use for everything
      */
     protected RobotController rc;
+    protected Radio radio;
+    protected Pathfinder path;
 
     /**
      * standard ctor; runs init
-     * @param rc_param
+     * @param rc_param robot controller
      */
     public GameRobot(RobotController rc_param){
         rc = rc_param;
+        radio = new Radio(rc);
+        path = new Pathfinder(rc);
         init();
     }
 
@@ -31,41 +35,11 @@ public abstract class GameRobot {
      * this runs every game turn. make sure to not accidentally go over any bytecode limits.
      * @param turn game turn number
      */
-    abstract void loop(int turn);
+    abstract void loop(int turn) throws GameActionException;
 
-    /**
-     * SHARED METHODS BELOW
-     */
-
-    /**
-     * returns whether the space immediately in the given direction is NOT flooded
-     * @param type type of robot (here because sometimes we want to check for someone else)
-     * @param dir direction to check in
-     * @return true if type is drone or space is not flooded, false otherwise
-     */
-    protected boolean sinkSafe(RobotType type, Direction dir) throws GameActionException{
-        if(type == RobotType.DELIVERY_DRONE) return true;
-        return !rc.senseFlooding(rc.adjacentLocation(dir));
-    }
-
-    /**
-     * overload for readability
-     */
-    protected boolean sinkSafe(Direction dir) throws GameActionException{
-        return sinkSafe(rc.getType(), dir);
-    }
-
-    /**
-     * attempts to move in the given direction
-     * @param dir direction to move in
-     * @return true if we move; false otherwise.
-     */
-    protected boolean move(Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canMove(dir) && sinkSafe(dir)) {
-            rc.move(dir);
-            return true;
-        } else return false;
-    }
+    /* * * * * * * * * * * * * * * * * * * * * * * * * *
+     * SHARED METHODS BELOW                            *
+     * * * * * * * * * * * * * * * * * * * * * * * * * */
 
     /**
      * tries to build a robot in the given direction
@@ -74,7 +48,7 @@ public abstract class GameRobot {
      * @return true if we successfully built it, false otherwise
      */
     protected boolean build(RobotType type, Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canBuildRobot(type, dir) && sinkSafe(type, dir)) {
+        if (rc.isReady() && rc.canBuildRobot(type, dir) && path.sinkSafe(type, dir)) {
             rc.buildRobot(type, dir);
             return true;
         } else return false;
@@ -129,14 +103,14 @@ public abstract class GameRobot {
     }
 
     /**
-     * bids a message to the blockchain
-     * @param message list of 7 ints
-     * @param bid how high to bid
+     * tries to shoot a unit
+     * @param target who to shoot
+     * @return true if we shot them, false otherwise
      */
-    protected void bid(int[] message, int bid) throws GameActionException{
-        if(rc.canSubmitTransaction(message, bid)){
-            rc.submitTransaction(message, bid);
-        }
+    protected boolean shoot(RobotInfo target) throws GameActionException{
+        if(rc.isReady() && rc.canShootUnit(target.getID())){
+            rc.shootUnit(target.getID());
+            return true;
+        } else return false;
     }
-
 }

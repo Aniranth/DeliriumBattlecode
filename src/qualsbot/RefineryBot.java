@@ -1,5 +1,6 @@
 package qualsbot;
 
+import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 
 public class RefineryBot extends GameRobot {
@@ -13,7 +14,7 @@ public class RefineryBot extends GameRobot {
     }
 
     @Override
-    protected void loop(int turn){
+    protected void loop(int turn) throws GameActionException {
 
     }
 }
