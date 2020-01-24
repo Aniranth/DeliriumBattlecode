@@ -2,19 +2,28 @@ package qualsbot;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
+import battlecode.common.RobotType;
 
 public class HQBot extends NetBot {
-    public HQBot(RobotController rc) {
+
+    private static final int DESIRED_MINERS = 7;
+
+    private int minerCount = 0;
+
+    public HQBot(RobotController rc) throws GameActionException {
         super(rc);
     }
 
     @Override
-    protected void init() {
-        return;
+    protected void init() throws GameActionException {
+        radio.HQLoc(rc.getLocation());
     }
 
     @Override
-    protected void loop(int turn) throws GameActionException {
+    public void loop(int turn) throws GameActionException {
         super.loop(turn);
+        if(minerCount < DESIRED_MINERS){
+            build(RobotType.MINER, path.randomDir());
+        }
     }
 }

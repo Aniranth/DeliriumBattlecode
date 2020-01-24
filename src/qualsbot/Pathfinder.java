@@ -59,6 +59,7 @@ public class Pathfinder {
      * @return true if we move, false otherwise
      */
     public boolean to(MapLocation loc) throws GameActionException {
+        if(loc == null) return false;
         return to(rc.getLocation().directionTo(loc));
     }
 
@@ -68,6 +69,7 @@ public class Pathfinder {
      * @return true if we move, false otherwise
      */
     public boolean to(Direction dir) throws GameActionException{
+        if(dir == null) return false;
         Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(),
                 dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
         for (Direction d : toTry){
@@ -75,5 +77,9 @@ public class Pathfinder {
                 return true;
         }
         return false;
+    }
+
+    public Direction randomDir(){
+        return directions[(int) (Math.random() * directions.length)];
     }
 }

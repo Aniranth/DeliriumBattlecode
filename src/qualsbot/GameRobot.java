@@ -19,7 +19,7 @@ public abstract class GameRobot {
      * standard ctor; runs init
      * @param rc_param robot controller
      */
-    public GameRobot(RobotController rc_param){
+    public GameRobot(RobotController rc_param) throws GameActionException{
         rc = rc_param;
         radio = new Radio(rc);
         path = new Pathfinder(rc);
@@ -29,7 +29,7 @@ public abstract class GameRobot {
     /**
      * any first-time setup that needs to happen for the robot to function in loop
      */
-    protected abstract void init();
+    protected abstract void init() throws GameActionException;
 
     /**
      * this runs every game turn. make sure to not accidentally go over any bytecode limits.

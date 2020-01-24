@@ -4,17 +4,17 @@ import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 
 public class DroneBot extends GameRobot {
-    public DroneBot(RobotController rc) {
+    public DroneBot(RobotController rc) throws GameActionException {
         super(rc);
     }
 
     @Override
-    protected void init() {
+    protected void init() throws GameActionException {
 
     }
 
     @Override
-    protected void loop(int turn) throws GameActionException {
+    public void loop(int turn) throws GameActionException {
 
     }
 }
