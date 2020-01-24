@@ -34,9 +34,11 @@ public class MinerBot extends GameRobot {
 
         // mine around us
         for(Direction dir : Pathfinder.directions){
-            if(refine(dir)){
+            if(mine(dir)){
                 MapLocation sloc = rc.getLocation().add(dir);
                 if(!soupLocs.contains(sloc)){
+                    soupLocs.add(sloc);
+                    System.out.println("soup acquired; broadcasting location");
                     radio.soupLoc(sloc);
                 }
             }
@@ -74,6 +76,7 @@ public class MinerBot extends GameRobot {
         while(soupLocs.size() > 0){
             target = soupLocs.get(0);
             if(rc.canSenseLocation(target) && rc.senseSoup(target) == 0){
+                System.out.println("This space is out of soup");
                 soupLocs.remove(0);
             } else break;
         }
