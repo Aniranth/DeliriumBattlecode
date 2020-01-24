@@ -24,6 +24,7 @@ public class HQBot extends NetBot {
         super.loop(turn);
         if(minerCount < DESIRED_MINERS){
             build(RobotType.MINER, path.randomDir());
+            minerCount++;
         }
     }
 }

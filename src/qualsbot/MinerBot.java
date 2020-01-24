@@ -30,7 +30,7 @@ public class MinerBot extends GameRobot {
         starportCount = radio.updateStarportCount();
         radio.updateSoupLoc(soupLocs);
 
-        while(targetSoup());
+        targetSoup();
 
         // mine around us
         for(Direction dir : Pathfinder.directions){
@@ -69,14 +69,13 @@ public class MinerBot extends GameRobot {
     }
 
 
-    private boolean targetSoup() throws GameActionException{
-        if(soupLocs.size() > 0){
-            MapLocation target = soupLocs.get(0);
+    private void targetSoup() throws GameActionException{
+        MapLocation target;
+        while(soupLocs.size() > 0){
+            target = soupLocs.get(0);
             if(rc.canSenseLocation(target) && rc.senseSoup(target) == 0){
                 soupLocs.remove(0);
-                return true;
-            }
+            } else break;
         }
-        return false;
     }
 }
