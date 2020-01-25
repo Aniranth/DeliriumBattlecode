@@ -15,6 +15,6 @@ public class DroneBot extends GameRobot {
 
     @Override
     public void loop(int turn) throws GameActionException {
-
+        path.move(path.randomDir()); // TODO
     }
 }

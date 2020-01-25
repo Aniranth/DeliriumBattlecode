@@ -2,6 +2,9 @@ package qualsbot;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
+import java.util.Map;
+
 /**
  * class for moving around the map
  */
@@ -77,6 +80,45 @@ public class Pathfinder {
                 return true;
         }
         return false;
+    }
+
+    private MapLocation[] allSpacesInRadius(){
+        return allSpacesInRadius(rc.getCurrentSensorRadiusSquared());
+    }
+
+    /**
+     * WARNING WARNING WARNING
+     * THIS IS SLOW AF
+     * TRY TO AVOID CALLING THIS EXCEPT WHEN TOTALLY NECESSARY
+     * @param r radius to check
+     * @return an array of every square in our radius
+     */
+    private MapLocation[] allSpacesInRadius(int r){
+        int max_x = rc.getLocation().x + r;
+        int min_x = rc.getLocation().x - r;
+        int max_y = rc.getLocation().y + r;
+        int min_y = rc.getLocation().y - r;
+
+        ArrayList<MapLocation> locs = new ArrayList<MapLocation>();
+
+        // check all the squares in a box around us for if we can scan them
+        // yes we waste a little time at the corners but it's an easy implementation
+        for(int y = min_y; y <= max_y; y++){
+            for(int x = min_x; x <= max_x; x++){
+                MapLocation square = new MapLocation(x,y);
+                if(!rc.getLocation().isWithinDistanceSquared(square, r)) continue;
+                if(rc.canSenseLocation(square)) locs.add(square);
+            }
+        }
+
+        return locs.toArray(new MapLocation[locs.size()]);
+    }
+
+    public MapLocation findSoup() throws GameActionException{
+        for(MapLocation square : allSpacesInRadius()){
+            if(rc.senseSoup(square) > 0) return square;
+        }
+        return null;
     }
 
     public Direction randomDir(){

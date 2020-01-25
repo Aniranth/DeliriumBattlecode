@@ -24,8 +24,7 @@ public class HQBot extends NetBot {
     public void loop(int turn) throws GameActionException {
         super.loop(turn);
         if(minerCount < DESIRED_MINERS){
-            build(RobotType.MINER, path.randomDir());
-            minerCount++;
+            if(build(RobotType.MINER, path.randomDir())) minerCount++;
         }
     }
 }

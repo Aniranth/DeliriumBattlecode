@@ -5,9 +5,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.Transaction;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * class for interfacing with the blockchain
@@ -50,7 +48,7 @@ public class Radio {
      * 3    -   sender ID
      * 2    -   y position
      * 1    -   building count
-     * 0    -   "random" value
+     * 0    -   "random" value that rounds out the sum
      */
     private static final int TID = 6;
     private static final int MSG_TYPE = 5;
@@ -76,8 +74,12 @@ public class Radio {
     /**
      * generates a random number for the RAND portion of message
      */
-    private void rand(){
-        message[RAND] = (int)(Math.random()*100000);
+    private void setSumInt(){
+        int partialMsgSum = -message[RAND]; // get sum of ints without fill bit
+        for(int i : message){
+            partialMsgSum += i;
+        }
+        message[RAND] = TEAM_IDENTIFIER - partialMsgSum;
     }
 
     /**
@@ -123,7 +125,7 @@ public class Radio {
      * bids our message to the blockchain
      */
     private void bid() throws GameActionException {
-        rand();
+        setSumInt();
         int[] enc_message = encode(message);
         if(rc.canSubmitTransaction(enc_message, bid)){
             rc.submitTransaction(enc_message, bid);
@@ -133,6 +135,14 @@ public class Radio {
     /* ********
      * encode/decode TODO
      * ********/
+
+    private boolean fromUs(int[] m){
+        int msgSum = 0;
+        for(int i : m){
+            msgSum += i;
+        }
+        return msgSum == TEAM_IDENTIFIER;
+    }
 
     /** TODO
      * encode message to post to blockchain
@@ -192,7 +202,7 @@ public class Radio {
         for(int i = 1; i < rc.getRoundNum(); i++){
             for(Transaction t : rc.getBlock(i)) {
                 int[] m = decode(t.getMessage());
-                if(m[TID] == TEAM_IDENTIFIER && m[MSG_TYPE] == msg_type){
+                if(fromUs(m) && m[MSG_TYPE] == msg_type){
                     return new MapLocation(m[X], m[Y]);
                 }
             }
@@ -212,27 +222,33 @@ public class Radio {
     private void updateLoc(ArrayList<MapLocation> loc, int msg_type) throws GameActionException{
         for(Transaction t : rc.getBlock(rc.getRoundNum() - 1)) {
             int[] m = decode(t.getMessage());
-            if(m[TID] == TEAM_IDENTIFIER && m[MSG_TYPE] == msg_type){
+            if(fromUs(m) && m[MSG_TYPE] == msg_type){
                 MapLocation loc_to_add = new MapLocation(m[X], m[Y]);
                 if(!loc.contains(loc_to_add)) loc.add(loc_to_add); //TODO do MapLocations do equality?
             }
         }
     }
 
-    public int updateFactoryCount() throws GameActionException{
-        return updateCount(FACTORY_CT);
+    public int updateFactoryCount(int current_count) throws GameActionException{
+        return updateCount(current_count, FACTORY_CT);
     }
 
-    public int updateStarportCount() throws GameActionException{
-        return updateCount(STARPORT_CT);
+    public int updateStarportCount(int current_count) throws GameActionException{
+        return updateCount(current_count, STARPORT_CT);
     }
 
-    private int updateCount(int msg_type) throws GameActionException{
-        int count = 0;
+    /**
+     * gets the number of buildings made last round
+     * @param msg_type what building we looking for
+     * @return number of buildings made last round
+     * @throws GameActionException
+     */
+    private int updateCount(int current_count, int msg_type) throws GameActionException{
+        int count = current_count;
         for(Transaction t : rc.getBlock(rc.getRoundNum() - 1)){
             int[] m = decode(t.getMessage());
             if(m[TID] == TEAM_IDENTIFIER && m[MSG_TYPE] == msg_type){
-                if(count <= 0) count = m[BLD_CT];
+                if(count == current_count) count = Math.max(m[BLD_CT], current_count);
                 else count = Math.max(count, m[BLD_CT]) + 1; // two people built at the same time
             }
         }

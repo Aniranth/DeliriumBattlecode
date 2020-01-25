@@ -12,6 +12,7 @@ public class MinerBot extends GameRobot {
 
     private MapLocation hqLoc = null;
 
+    // you're gonna get a little more than this for various reasons
     private static final int DESIRED_FACTORIES = 3;
     private static final int DESIRED_STARPORTS = 3;
 
@@ -21,14 +22,19 @@ public class MinerBot extends GameRobot {
 
     @Override
     protected void init() throws GameActionException{
-        hqLoc = radio.getHQLoc();
+        return; // nothing to init
     }
 
     @Override
     public void loop(int turn) throws GameActionException {
-        factoryCount = radio.updateFactoryCount();
-        starportCount = radio.updateStarportCount();
+        if(hqLoc == null){
+            hqLoc = radio.getHQLoc();
+        }
+        factoryCount = radio.updateFactoryCount(factoryCount);
+        starportCount = radio.updateStarportCount(starportCount);
         radio.updateSoupLoc(soupLocs);
+
+        System.out.println("F: " + factoryCount + "; S: " + starportCount);
 
         targetSoup();
 
@@ -38,7 +44,6 @@ public class MinerBot extends GameRobot {
                 MapLocation sloc = rc.getLocation().add(dir);
                 if(!soupLocs.contains(sloc)){
                     soupLocs.add(sloc);
-                    System.out.println("soup acquired; broadcasting location");
                     radio.soupLoc(sloc);
                 }
             }
@@ -63,10 +68,17 @@ public class MinerBot extends GameRobot {
         // manage where we're going and what we're doing
         if(rc.getSoupCarrying() >= RobotType.MINER.soupLimit){
             path.to(hqLoc);
-        } else if(soupLocs.size() > 0){
+        } else if(soupLocs.size() > 0) {
             path.to(soupLocs.get(0));
         } else {
-            path.move(path.randomDir());
+            MapLocation sloc = path.findSoup();
+            if(sloc != null && !soupLocs.contains(sloc)){
+                soupLocs.add(sloc);
+                radio.soupLoc(sloc);
+                path.to(sloc);
+            } else {
+                path.move(path.randomDir());
+            }
         }
     }
 
@@ -76,7 +88,6 @@ public class MinerBot extends GameRobot {
         while(soupLocs.size() > 0){
             target = soupLocs.get(0);
             if(rc.canSenseLocation(target) && rc.senseSoup(target) == 0){
-                System.out.println("This space is out of soup");
                 soupLocs.remove(0);
             } else break;
         }
