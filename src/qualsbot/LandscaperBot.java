@@ -53,6 +53,7 @@ public class LandscaperBot extends GameRobot {
             if (hqLoc == null) return; // can't do anything without this. be obvious about being broke.
         }
 
+
         if (!in_place) {
             in_place = path.assimilate(wallLocs, hqLoc);
         } else {

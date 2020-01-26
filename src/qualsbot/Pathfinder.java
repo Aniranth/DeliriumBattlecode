@@ -173,6 +173,7 @@ public class Pathfinder {
         MapLocation targetPost = fallback;
         while(structure.size() > 0){
             MapLocation post = structure.get(0);
+
             // if we don't know a post is ok OR if we know it's ok, go to it
             if(!rc.canSenseLocation(post) || !rc.isLocationOccupied(post)) {
                 targetPost = post;
