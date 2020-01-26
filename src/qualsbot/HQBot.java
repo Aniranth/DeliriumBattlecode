@@ -6,7 +6,7 @@ import battlecode.common.RobotType;
 
 public class HQBot extends NetBot {
 
-    private static final int DESIRED_MINERS = 7;
+    private static final int DESIRED_MINERS = 3;
 
     private int minerCount = 0;
 

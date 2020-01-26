@@ -12,9 +12,10 @@ public class MinerBot extends GameRobot {
 
     private MapLocation hqLoc = null;
 
-    // you're gonna get a little more than this for various reasons
-    private static final int DESIRED_FACTORIES = 3;
-    private static final int DESIRED_STARPORTS = 3;
+    private static final int DESIRED_FACTORIES = 1;
+    private static final int DESIRED_STARPORTS = 1;
+	
+	private boolean constructor_bot = true;
 
     public MinerBot(RobotController rc) throws GameActionException {
         super(rc);
@@ -22,6 +23,11 @@ public class MinerBot extends GameRobot {
 
     @Override
     protected void init() throws GameActionException{
+		for(RobotInfo nearby_robots : rc.senseNearbyRobots()) {
+			if(nearby_robots.team == rc.getTeam() && nearby_robots.type == RobotType.MINER) {
+				constructor_bot = false;
+			}
+		}
         return; // nothing to init
     }
 
@@ -55,13 +61,17 @@ public class MinerBot extends GameRobot {
         }
 
         // build necessary units
-        if(factoryCount < DESIRED_FACTORIES){
-            if(build(RobotType.DESIGN_SCHOOL, path.randomDir())){
-                radio.sendFactoryCt(++factoryCount);
-            }
-        } else if(starportCount < DESIRED_STARPORTS){
+        if(factoryCount < DESIRED_FACTORIES && constructor_bot){
+			if(rc.getLocation().isWithinDistanceSquared(hqLoc, 9)) {
+				if(build(RobotType.DESIGN_SCHOOL, path.randomDir())){
+					radio.sendFactoryCt(++factoryCount);
+				}
+			} else {
+				path.to(hqLoc);
+			}
+        } else if(starportCount < DESIRED_STARPORTS && constructor_bot){
             if(build(RobotType.FULFILLMENT_CENTER, path.randomDir())){
-                radio.sendFactoryCt(++starportCount);
+                radio.sendStarportCt(++starportCount);
             }
         }
 
