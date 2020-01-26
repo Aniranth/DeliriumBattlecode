@@ -203,9 +203,6 @@ public class Radio {
         return getLoc(ENEMY_LOC);
     }
 
-    public MapLocation getRefineryLoc() throws GameActionException{
-        return getLoc(REFINERY_LOC);
-    }
 
     /**
      * searches the blockchain back to front
@@ -227,6 +224,10 @@ public class Radio {
         updateLoc(sloc, SOUP_LOC);
     }
 
+    public MapLocation getRefineryLoc(MapLocation def) throws GameActionException{
+        return updateLoc(def, REFINERY_LOC);
+    }
+
     /**
      * checks the previous round for updates to location
      * then updates the parameter with new locations
@@ -241,6 +242,24 @@ public class Radio {
             }
         }
     }
+
+    /**
+     * similar to the above, but only returns one location
+     * @param def default location if one is not found
+     */
+    private MapLocation updateLoc(MapLocation def, int msg_type) throws GameActionException{
+        for(Transaction t : rc.getBlock(rc.getRoundNum() - 1)) {
+            int[] m = decode(t.getMessage());
+            if(fromUs(m) && m[MSG_TYPE] == msg_type){
+                return new MapLocation(m[X], m[Y]);
+            }
+        }
+        return def;
+    }
+
+
+
+
 
     public int updateFactoryCount(int current_count) throws GameActionException{
         return updateCount(current_count, FACTORY_CT);
@@ -260,7 +279,7 @@ public class Radio {
         int count = current_count;
         for(Transaction t : rc.getBlock(rc.getRoundNum() - 1)){
             int[] m = decode(t.getMessage());
-            if(m[TID] == TEAM_IDENTIFIER && m[MSG_TYPE] == msg_type){
+            if(fromUs(m) && m[MSG_TYPE] == msg_type){
                 if(count == current_count) count = Math.max(m[BLD_CT], current_count);
                 else count = Math.max(count, m[BLD_CT]) + 1; // two people built at the same time
             }

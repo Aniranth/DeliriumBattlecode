@@ -10,7 +10,7 @@ public class RobotPlayer {
     public static void run(RobotController rc) throws GameActionException {
         RobotPlayer.rc = rc;
         GameRobot r = null;
-        int turnCount = 0;
+        int turnCount = rc.getRoundNum();
 
         switch(rc.getType()) {
             case HQ:                    r = new HQBot(rc);                  break;
@@ -25,7 +25,9 @@ public class RobotPlayer {
         }
         while(r != null) {
             try {
-                r.loop(++turnCount);
+                System.out.println("running");
+                r.loop(turnCount++);
+                System.out.println("lag: " + (1 + rc.getRoundNum() - turnCount) );
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println("Exception caught: " + e.getMessage());
@@ -33,7 +35,10 @@ public class RobotPlayer {
             }
         }
         System.out.println("Failed to initialize");
-        while(true) Clock.yield(); // do nothing
+        while(true) {
+            System.out.println("I NEED HELP IMMEDIATELY");
+            Clock.yield(); // do nothing
+        }
     }
 
 }

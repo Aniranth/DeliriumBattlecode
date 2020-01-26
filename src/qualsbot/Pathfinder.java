@@ -63,15 +63,11 @@ public class Pathfinder {
      */
     public void scout() throws GameActionException {
         // try to scout in the same dir
-        if(!move(scoutDir)){
-            // try turning
-            scoutDir = scoutDir.rotateRight();
-            // avoids following the wall
-            if(!move(scoutDir)){
-                scoutDir = scoutDir.opposite();
-                scout();
-            }
+        for(int i = 0; i < 8; i++){
+            if(move(scoutDir)) return;
+            scoutDir = scoutDir.rotateRight().rotateRight().rotateRight();
         }
+        // we are trapped :c
     }
 
     /**
@@ -147,8 +143,8 @@ public class Pathfinder {
     public boolean isLegal(MapLocation l){
         int x = l.x;
         int y = l.y;
-        int mx = rc.getMapHeight()-1; // max x
-        int my = rc.getMapWidth()-1; // max y
+        int mx = rc.getMapWidth()-1; // max x
+        int my = rc.getMapHeight()-1; // max y
         return x <= mx && y <= my && x >= 0 && y >= 0;
     }
 
@@ -182,13 +178,13 @@ public class Pathfinder {
                 targetPost = post;
                 break;
             }
-            // that post is occupied by a friendly drone? it's all good, forget about it.
+            // that post is occupied by a friendly unit? it's all good, forget about it.
             RobotInfo occupier = rc.senseRobotAtLocation(post);
             boolean occupier_friendly = occupier.getTeam().equals(rc.getTeam());
-            boolean occupier_drone = occupier.getType().equals(rc.getType());
-            if(occupier_friendly && occupier_drone) structure.remove(post);
+            boolean occupier_type = occupier.getType().equals(rc.getType());
+            if(occupier_friendly && occupier_type) structure.remove(post);
         }
-        System.out.println("pathing to x: " + targetPost.x + ",y: " + targetPost.y);
+        System.out.println("pathing to " + targetPost);
         this.to(targetPost);
         if(rc.getLocation().equals(targetPost)) {
             return true; // we are in the right place!

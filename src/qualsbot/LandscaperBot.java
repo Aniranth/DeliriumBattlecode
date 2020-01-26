@@ -49,20 +49,18 @@ public class LandscaperBot extends GameRobot {
     @Override
     public void loop(int turn) throws GameActionException {
         if (hqLoc == null) {
-            init(turn); // properly init ourselves
+            init(turn); // try to properly init ourselves
+            if (hqLoc == null) return; // can't do anything without this. be obvious about being broke.
         }
-        if (hqLoc == null) return; // can't do anything without this. be obvious about being broke.
-        if (wallLocs.size() == 0) wallLocs = path.offsetsToLocations(POSITION_OFFSETS, hqLoc);
 
         if (!in_place) {
             in_place = path.assimilate(wallLocs, hqLoc);
         } else {
             // choose a spot to dig
             if(digLoc == null) {
-                for (int[] offset : DIG_OFFSETS) {
-                    MapLocation dig_check = new MapLocation(hqLoc.x + offset[0], hqLoc.y + offset[1]);
-                    if (rc.getLocation().isAdjacentTo(dig_check)) {
-                        digLoc = dig_check;
+                for (MapLocation l : digLocs) {
+                    if (rc.getLocation().isAdjacentTo(l)) {
+                        digLoc = l;
                     }
                 }
             }

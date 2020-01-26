@@ -38,13 +38,8 @@ public class MinerBot extends GameRobot {
     @Override
     public void loop(int turn) throws GameActionException {
         if(hqLoc == null) hqLoc = radio.getHQLoc();
-        if(soupDeposit == null || soupDeposit.equals(hqLoc)) soupDeposit = radio.getRefineryLoc();
-        if(soupDeposit == null) soupDeposit = hqLoc;
-        //factoryCount = radio.updateFactoryCount(factoryCount);
-        //starportCount = radio.updateStarportCount(starportCount);
+        if(soupDeposit == null || soupDeposit.equals(hqLoc)) soupDeposit = radio.getRefineryLoc(hqLoc);
         radio.updateSoupLoc(soupLocs);
-
-        //System.out.println("F: " + factoryCount + "; S: " + starportCount);
 
         targetSoup();
 
@@ -64,15 +59,14 @@ public class MinerBot extends GameRobot {
             if(refine(dir)) break;
         }
 
-        if(constructor_bot) {
-            construct(turn);
-            return; // focus on your job
-        }
+        if(constructor_bot && construct(turn)) return; // if we built, focus on that
+
 		
 //		if(turn >= MAKE_WALL) { //Get out of the way
 //		    path.scout();
 //			//rc.disintegrate(); //I meant it
 //		}
+
 
         // manage where we're going and what we're doing
         if(rc.getSoupCarrying() >= RobotType.MINER.soupLimit){
@@ -94,7 +88,11 @@ public class MinerBot extends GameRobot {
         }
     }
 
-    private void construct(int turn) throws GameActionException{
+    /**
+     * construction method
+     * @return true if we moved towards building something, false otherwise
+     */
+    private boolean construct(int turn) throws GameActionException{
         Direction buildDir = rc.getLocation().directionTo(hqLoc).opposite();
         Direction[] buildDirs = new Direction[] {buildDir, buildDir.rotateRight(), buildDir.rotateLeft()};
         if(refineryCount < DESIRED_REFINERIES){
@@ -108,6 +106,7 @@ public class MinerBot extends GameRobot {
                         break;
                     }
                 }
+                return true;
             }
         } else if(factoryCount < DESIRED_FACTORIES){
             if(path.awayFrom(hqLoc, DISTANCE_TO_BUILD)){
@@ -118,8 +117,9 @@ public class MinerBot extends GameRobot {
                         break;
                     }
                 }
+                return true;
             }
-        } else if(starportCount < DESIRED_STARPORTS){
+        } else if(starportCount < DESIRED_STARPORTS && turn > BUILD_STARPORT){
             if(path.awayFrom(hqLoc, DISTANCE_TO_BUILD)){
                 // if we're here, we are far enough.
                 for(Direction d : buildDirs) {
@@ -128,41 +128,12 @@ public class MinerBot extends GameRobot {
                         break;
                     }
                 }
+                return true;
             }
         } else {
             constructor_bot = false; //  My work here is done
         }
-//        if(refineryCount < DESIRED_REFINERIES){
-//            if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD) {
-//                if(build(RobotType.REFINERY, rc.getLocation().directionTo(hqLoc).opposite())){
-//                    ++refineryCount;
-//                    soupDeposit = rc.getLocation().add(rc.getLocation().directionTo(hqLoc).opposite());
-//                }
-//            } else if(rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost){
-//                int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/6:-rc.getMapHeight()/6;
-//                path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
-//            }
-//        }
-//        if(factoryCount < DESIRED_FACTORIES){
-//            if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD) {
-//                if(build(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(hqLoc).opposite())){
-//                    ++factoryCount;
-//                }
-//            } else if(rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost){
-//                int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/6:-rc.getMapHeight()/6;
-//                path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
-//            }
-//        } else if(starportCount < DESIRED_STARPORTS && turn >= BUILD_STARPORT){
-//            if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD){
-//                if(build(RobotType.FULFILLMENT_CENTER, rc.getLocation().directionTo(hqLoc).opposite())){
-//                    ++starportCount;
-//                }
-//            } else if(rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost){
-//                int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/4:-rc.getMapHeight()/4;
-//                path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
-//
-//            }
-//        }
+        return false;
     }
 
     private void targetSoup() throws GameActionException{
