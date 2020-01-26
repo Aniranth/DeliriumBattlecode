@@ -3,6 +3,9 @@ package qualsbot;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
+
+import java.util.ArrayList;
 
 public class NetBot extends GameRobot {
     public NetBot(RobotController rc) throws GameActionException {
@@ -16,10 +19,21 @@ public class NetBot extends GameRobot {
 
     @Override
     public void loop(int turn) throws GameActionException {
-        RobotInfo[] scan = rc.senseNearbyRobots(rc.getCurrentSensorRadiusSquared(), rc.getTeam().opponent());
-        RobotInfo target = null;
+        ArrayList<RobotInfo> targets = new ArrayList<>();
+        int shootRange = Math.min(rc.getCurrentSensorRadiusSquared(), RobotType.NET_GUN.sensorRadiusSquared);
+        RobotInfo[] scan = rc.senseNearbyRobots(shootRange, rc.getTeam().opponent());
         for(RobotInfo i : scan){
-            if(shoot(i)) break;
+            if(rc.canShootUnit(i.getID())) targets.add(i);
         }
+        RobotInfo target = targets.get(0);
+        int minDistSq = rc.getLocation().distanceSquaredTo(target.getLocation());
+        for(RobotInfo option : targets){
+            int distSq = rc.getLocation().distanceSquaredTo(option.getLocation());
+            if(distSq < minDistSq){
+                target = option;
+                minDistSq = distSq;
+            }
+        }
+        shoot(target);
     }
 }

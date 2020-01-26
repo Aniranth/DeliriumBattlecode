@@ -7,7 +7,7 @@ import battlecode.common.RobotType;
 public class StarportBot extends GameRobot {
 
     // keep in mind this is PER STARPORT
-    private static final int DESIRED_DRONES = 5;
+    private static final int DESIRED_DRONES = 24;
 
     private int droneCount = 0;
 
