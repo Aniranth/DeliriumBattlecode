@@ -176,7 +176,7 @@ public class Pathfinder {
             // that post is occupied by a friendly drone? it's all good, forget about it.
             RobotInfo occupier = rc.senseRobotAtLocation(post);
             boolean occupier_friendly = occupier.getTeam().equals(rc.getTeam());
-            boolean occupier_drone = occupier.getType().equals(RobotType.DELIVERY_DRONE);
+            boolean occupier_drone = occupier.getType().equals(rc.getType());
             if(occupier_friendly && occupier_drone) structure.remove(post);
         }
         System.out.println("pathing to x: " + targetPost.x + ",y: " + targetPost.y);

@@ -17,6 +17,7 @@ public class MinerBot extends GameRobot {
 	
 	private static final int DISTANCE_TO_BUILD = 15; // Change to make buildings further from base
 	private static final int BUILD_STARPORT = 200;
+	private static final int MAKE_WALL = 400;
 	
 	private boolean constructor_bot;
 
@@ -67,7 +68,8 @@ public class MinerBot extends GameRobot {
 					radio.sendFactoryCt(++factoryCount);
 				}
 			} else if(rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost){
-				path.to(rc.getLocation().directionTo(hqLoc).opposite());
+				int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/6:-rc.getMapHeight()/6;
+				path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
 			}
         } else if(starportCount < DESIRED_STARPORTS && constructor_bot && turn >= BUILD_STARPORT){
 			if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD){
@@ -75,9 +77,14 @@ public class MinerBot extends GameRobot {
 					radio.sendStarportCt(++starportCount);
 				}
 			} else if(rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost){
-				path.to(rc.getLocation().directionTo(hqLoc).opposite());
+				int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/4:-rc.getMapHeight()/4;
+				path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
 			}
         }
+		
+		if(turn >= MAKE_WALL) { //Get out of the way
+			rc.disintegrate(); //I meant it
+		}
 
         // manage where we're going and what we're doing
         if(rc.getSoupCarrying() >= RobotType.MINER.soupLimit){
@@ -90,8 +97,10 @@ public class MinerBot extends GameRobot {
                 soupLocs.add(sloc);
                 radio.soupLoc(sloc);
                 path.to(sloc);
-            } else {
-                path.scout();
+            } else { //TODO: Parth please make the scouting thing better I am sending them away so they don't block
+                //path.scout();
+				int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/2:-rc.getMapHeight()/2;
+				path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
             }
         }
     }
