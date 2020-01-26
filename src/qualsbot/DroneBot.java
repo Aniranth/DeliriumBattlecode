@@ -50,20 +50,6 @@ public class DroneBot extends GameRobot {
         if((hqLoc = radio.getHQLoc()) != null) buildPath = path.offsetsToLocations(OFFSETS, hqLoc);
     }
 
-//    private void initBuildPath(){
-//        if(hqLoc == null) return; // can't do anything without the HQ loc
-//        int cx = hqLoc.x; // center x
-//        int cy = hqLoc.y; // center y
-//        int mx = rc.getMapHeight()-1; // max x
-//        int my = rc.getMapWidth()-1; // max y
-//        for(int[] offset : OFFSETS){
-//            int x = cx + offset[0];
-//            int y = cy + offset[1];
-//            if(x > mx || y > my || x < 0 || y < 0) continue; // throw out impossible spaces
-//            buildPath.add(new MapLocation(x,y));
-//        }
-//    }
-
     @Override
     public void loop(int turn) throws GameActionException {
         if(hqLoc == null) hqLoc = radio.getHQLoc();

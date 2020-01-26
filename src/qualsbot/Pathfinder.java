@@ -140,18 +140,29 @@ public class Pathfinder {
         return null;
     }
 
+    /**
+     * @param l location to check legality of
+     * @return true if legal, false otherwise
+     */
+    public boolean isLegal(MapLocation l){
+        int x = l.x;
+        int y = l.y;
+        int mx = rc.getMapHeight()-1; // max x
+        int my = rc.getMapWidth()-1; // max y
+        return x <= mx && y <= my && x >= 0 && y >= 0;
+    }
+
     public ArrayList<MapLocation> offsetsToLocations(int[][] offsets, MapLocation center){
         if(center == null) return null; // can't do anything without relative location
         ArrayList<MapLocation> buildPath = new ArrayList<>();
         int cx = center.x; // center x
         int cy = center.y; // center y
-        int mx = rc.getMapHeight()-1; // max x
-        int my = rc.getMapWidth()-1; // max y
         for(int[] offset : offsets){
             int x = cx + offset[0];
             int y = cy + offset[1];
-            if(x > mx || y > my || x < 0 || y < 0) continue; // throw out impossible spaces
-            buildPath.add(new MapLocation(x,y));
+            MapLocation location = new MapLocation(x,y);
+            if(!isLegal(location)) continue; // throw out impossible spaces
+            buildPath.add(location);
         }
         return buildPath;
     }
@@ -185,10 +196,23 @@ public class Pathfinder {
         return false;
     }
 
-    public boolean awayFrom(MapLocation ref, int distancesq){
+    public boolean awayFrom(MapLocation ref, int distancesq) throws GameActionException{
         int currentDistance = rc.getLocation().distanceSquaredTo(ref);
         if(currentDistance >= distancesq) return true;
-        return false;//TODO
+        int approxSpacesAway = (int)Math.sqrt(distancesq);
+        Direction bestPath = rc.getLocation().directionTo(ref).opposite();
+        for(int i = 0; i < 7; i++){
+            MapLocation target = ref;
+            for(int j = 0; j < approxSpacesAway; j++){
+                target = target.add(bestPath);
+            }
+            if(isLegal(target)){
+                this.to(target);
+                return false;
+            }
+            bestPath = bestPath.rotateRight();
+        }
+        return false;
     }
 
     public Direction randomDir(){
