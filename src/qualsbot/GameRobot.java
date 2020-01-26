@@ -23,13 +23,14 @@ public abstract class GameRobot {
         rc = rc_param;
         radio = new Radio(rc);
         path = new Pathfinder(rc);
-        init();
+        init(rc.getRoundNum());
     }
 
     /**
      * any first-time setup that needs to happen for the robot to function in loop
+     * @param turn
      */
-    protected abstract void init() throws GameActionException;
+    protected abstract void init(int turn) throws GameActionException;
 
     /**
      * this runs every game turn. make sure to not accidentally go over any bytecode limits.

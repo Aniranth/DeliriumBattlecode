@@ -22,7 +22,7 @@ public class MinerBot extends GameRobot {
     }
 
     @Override
-    protected void init() throws GameActionException{
+    protected void init(int turn) throws GameActionException{
 		constructor_bot = turn == 2;
 		System.out.println("I am a " + (constructor_bot?"Constructor":"Miner"));
         return; // nothing to init

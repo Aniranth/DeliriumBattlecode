@@ -9,7 +9,7 @@ public class VaporatorBot extends GameRobot {
     }
 
     @Override
-    protected void init() throws GameActionException {
+    protected void init(int turn) throws GameActionException {
 
     }
 

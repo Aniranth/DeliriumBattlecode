@@ -1,8 +1,6 @@
 package qualsbot;
 
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 import java.util.ArrayList;
 
@@ -48,7 +46,7 @@ public class DroneBot extends GameRobot {
     }
 
     @Override
-    protected void init() throws GameActionException {
+    protected void init(int turn) throws GameActionException {
         if((hqLoc = radio.getHQLoc()) != null) initBuildPath();
     }
 
@@ -73,24 +71,31 @@ public class DroneBot extends GameRobot {
         if(buildPath.size() == 0) initBuildPath();
 
         if(!inWall){
-            if(buildPath.size() < 1){
-                path.to(hqLoc);
-            } else {
-                for(MapLocation post : buildPath){
-                    // if we don't know if a post is ok OR if we know it's ok, go to it
-                    if(!rc.canSenseLocation(post) || !rc.isLocationOccupied(post)) {
-                        path.to(post);
-                        return;
-                    }
-                    // else, try the next post
+            MapLocation targetPost = hqLoc;
+            while(buildPath.size() > 0 && targetPost.equals(hqLoc)){
+                MapLocation post = buildPath.get(0);
+                // if we don't know if a post is ok OR if we know it's ok, go to it
+                if(!rc.canSenseLocation(post) || !rc.isLocationOccupied(post)) {
+                    targetPost = post;
+                    break;
                 }
-                // if we are here, the wall is finished
-                // because we can sense each space, and know they are all occupied.
-                if(buildPath.contains(rc.getLocation())) inWall = true; // we are in the right place!
-                else path.to(hqLoc);
+                // that post is occupied by a friendly drone? it's all good, forget about it.
+                RobotInfo occupier = rc.senseRobotAtLocation(post);
+                boolean occupier_friendly = occupier.getTeam().equals(rc.getTeam());
+                boolean occupier_drone = occupier.getType().equals(RobotType.DELIVERY_DRONE);
+                if(occupier_friendly && occupier_drone) buildPath.remove(post);
+            }
+            // if we are here, the wall is finished
+            // because we can sense each space, and know they are all occupied.
+            System.out.println("pathing to x: " + targetPost.x + ",y: " + targetPost.y);
+            path.to(targetPost);
+            if(rc.getLocation().equals(targetPost)) {
+                System.out.println("I AM IN THE WALL");
+                inWall = true; // we are in the right place!
             }
         } else {
             // TODO await orders from HQ
+            System.out.println("Awaiting Orders");
             return;
         }
     }

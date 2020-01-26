@@ -15,7 +15,7 @@ public class HQBot extends NetBot {
     }
 
     @Override
-    protected void init() throws GameActionException {
+    protected void init(int turn) throws GameActionException {
         radio.HQLoc(rc.getLocation());
         System.out.println("gl hf");
     }

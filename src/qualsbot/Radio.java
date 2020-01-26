@@ -27,7 +27,7 @@ public class Radio {
         rc = rc_param;
         message = new int[7];
         message[TID] = TEAM_IDENTIFIER;
-        message[SID] = rc.getID();
+        message[MISC] = rc.getID();
         if(!sanityCheck()) System.out.println("Our radio is busted :c");
     }
 
@@ -53,7 +53,7 @@ public class Radio {
     private static final int TID = 6;
     private static final int MSG_TYPE = 5;
     private static final int X = 4;
-    private static final int SID = 3;
+    private static final int MISC = 3;
     private static final int Y = 2;
     private static final int BLD_CT = 1;
     private static final int RAND = 0;
@@ -66,7 +66,8 @@ public class Radio {
     private static final int SOUP_LOC = 2;
     private static final int FACTORY_CT = 3;
     private static final int STARPORT_CT = 4;
-    //private static final
+    private static final int WALL_SET = 5;
+    private static final int BAIT = 6; // pull a drone back to bait our opponents
 
     /* ********
      * Methods for writing to the blockchain
