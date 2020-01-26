@@ -11,6 +11,8 @@ import java.util.Map;
 public class Pathfinder {
     private RobotController rc;
 
+    private Direction scoutDir;
+
     static Direction[] directions = {
             Direction.NORTH,
             Direction.NORTHEAST,
@@ -24,6 +26,7 @@ public class Pathfinder {
 
     public Pathfinder(RobotController rc_param){
         rc = rc_param;
+        scoutDir = randomDir();
     }
 
     /**
@@ -54,6 +57,22 @@ public class Pathfinder {
             rc.move(dir);
             return true;
         } else return false;
+    }
+
+    /**
+     * run in a straight direction; if we hit a wall, try a different direction.
+     */
+    public void scout() throws GameActionException {
+        // try to scout in the same dir
+        if(!move(scoutDir)){
+            // try turning
+            scoutDir = scoutDir.rotateRight();
+            // avoids following the wall
+            if(!move(scoutDir)){
+                scoutDir = scoutDir.opposite();
+                scout();
+            }
+        }
     }
 
     /**
@@ -114,11 +133,50 @@ public class Pathfinder {
         return locs.toArray(new MapLocation[locs.size()]);
     }
 
+    /**
+     * get all spaces r distancesq away
+     * @param r radius of circle in distancesq
+     * @return all squares in that distance
+     */
+    private MapLocation[] quickScanRadius(int r){
+        //TODO
+        return null;
+    }
+
     public MapLocation findSoup() throws GameActionException{
         for(MapLocation square : allSpacesInRadius()){
             if(rc.senseSoup(square) > 0) return square;
         }
         return null;
+    }
+
+    /**
+     * work on creating a structure collaboratively
+     * @param structure spaces that need to be filled, in order of what needs to be filled first
+     * @param fallback location to path to if all the spaces are filled
+     * @return true if the structure is done, false otherwise
+     */
+    public boolean assimilate(ArrayList<MapLocation> structure, MapLocation fallback) throws GameActionException {
+        MapLocation targetPost = fallback;
+        while(structure.size() > 0){
+            MapLocation post = structure.get(0);
+            // if we don't know a post is ok OR if we know it's ok, go to it
+            if(!rc.canSenseLocation(post) || !rc.isLocationOccupied(post)) {
+                targetPost = post;
+                break;
+            }
+            // that post is occupied by a friendly drone? it's all good, forget about it.
+            RobotInfo occupier = rc.senseRobotAtLocation(post);
+            boolean occupier_friendly = occupier.getTeam().equals(rc.getTeam());
+            boolean occupier_drone = occupier.getType().equals(RobotType.DELIVERY_DRONE);
+            if(occupier_friendly && occupier_drone) structure.remove(post);
+        }
+        System.out.println("pathing to x: " + targetPost.x + ",y: " + targetPost.y);
+        this.to(targetPost);
+        if(rc.getLocation().equals(targetPost)) {
+            return true; // we are in the right place!
+        }
+        return false;
     }
 
     public Direction randomDir(){

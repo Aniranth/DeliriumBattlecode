@@ -9,7 +9,7 @@ public class DroneBot extends GameRobot {
     private static MapLocation hqLoc = null;
 
     // order in which to line up for the WALL
-    private static int[][] offsets = {
+    private static final int[][] OFFSETS = {
             new int[]{3,3},
             new int[]{3,2},
             new int[]{3,1},
@@ -56,7 +56,7 @@ public class DroneBot extends GameRobot {
         int cy = hqLoc.y; // center y
         int mx = rc.getMapHeight()-1; // max x
         int my = rc.getMapWidth()-1; // max y
-        for(int[] offset : offsets){
+        for(int[] offset : OFFSETS){
             int x = cx + offset[0];
             int y = cy + offset[1];
             if(x > mx || y > my || x < 0 || y < 0) continue; // throw out impossible spaces
@@ -71,28 +71,29 @@ public class DroneBot extends GameRobot {
         if(buildPath.size() == 0) initBuildPath();
 
         if(!inWall){
-            MapLocation targetPost = hqLoc;
-            while(buildPath.size() > 0 && targetPost.equals(hqLoc)){
-                MapLocation post = buildPath.get(0);
-                // if we don't know if a post is ok OR if we know it's ok, go to it
-                if(!rc.canSenseLocation(post) || !rc.isLocationOccupied(post)) {
-                    targetPost = post;
-                    break;
-                }
-                // that post is occupied by a friendly drone? it's all good, forget about it.
-                RobotInfo occupier = rc.senseRobotAtLocation(post);
-                boolean occupier_friendly = occupier.getTeam().equals(rc.getTeam());
-                boolean occupier_drone = occupier.getType().equals(RobotType.DELIVERY_DRONE);
-                if(occupier_friendly && occupier_drone) buildPath.remove(post);
-            }
-            // if we are here, the wall is finished
-            // because we can sense each space, and know they are all occupied.
-            System.out.println("pathing to x: " + targetPost.x + ",y: " + targetPost.y);
-            path.to(targetPost);
-            if(rc.getLocation().equals(targetPost)) {
-                System.out.println("I AM IN THE WALL");
-                inWall = true; // we are in the right place!
-            }
+            inWall = path.assimilate(buildPath, hqLoc);
+//            MapLocation targetPost = hqLoc;
+//            while(buildPath.size() > 0 && targetPost.equals(hqLoc)){
+//                MapLocation post = buildPath.get(0);
+//                // if we don't know if a post is ok OR if we know it's ok, go to it
+//                if(!rc.canSenseLocation(post) || !rc.isLocationOccupied(post)) {
+//                    targetPost = post;
+//                    break;
+//                }
+//                // that post is occupied by a friendly drone? it's all good, forget about it.
+//                RobotInfo occupier = rc.senseRobotAtLocation(post);
+//                boolean occupier_friendly = occupier.getTeam().equals(rc.getTeam());
+//                boolean occupier_drone = occupier.getType().equals(RobotType.DELIVERY_DRONE);
+//                if(occupier_friendly && occupier_drone) buildPath.remove(post);
+//            }
+//            // if we are here, the wall is finished
+//            // because we can sense each space, and know they are all occupied.
+//            System.out.println("pathing to x: " + targetPost.x + ",y: " + targetPost.y);
+//            path.to(targetPost);
+//            if(rc.getLocation().equals(targetPost)) {
+//                System.out.println("I AM IN THE WALL");
+//                inWall = true; // we are in the right place!
+//            }
         } else {
             // TODO await orders from HQ
             System.out.println("Awaiting Orders");
