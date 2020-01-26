@@ -68,6 +68,7 @@ public class Radio {
     private static final int STARPORT_CT = 4;
     private static final int WALL_SET = 5;
     private static final int BAIT = 6; // pull a drone back to bait our opponents
+    private static final int REFINERY_LOC = 7;
 
     /* ********
      * Methods for writing to the blockchain
@@ -107,6 +108,12 @@ public class Radio {
 
     public void soupLoc(MapLocation loc) throws GameActionException{
         message[MSG_TYPE] = SOUP_LOC;
+        sendLoc(loc);
+        bid();
+    }
+
+    public void refineryLoc(MapLocation loc) throws GameActionException{
+        message[MSG_TYPE] = REFINERY_LOC;
         sendLoc(loc);
         bid();
     }
@@ -194,6 +201,10 @@ public class Radio {
      */
     public MapLocation getEnemyHQLoc() throws GameActionException{
         return getLoc(ENEMY_LOC);
+    }
+
+    public MapLocation getRefineryLoc() throws GameActionException{
+        return getLoc(REFINERY_LOC);
     }
 
     /**

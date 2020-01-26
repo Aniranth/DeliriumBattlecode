@@ -8,12 +8,15 @@ public class MinerBot extends GameRobot {
 
     private int factoryCount = 0;
     private int starportCount = 0;
+    private int refineryCount = 0;
     private ArrayList<MapLocation> soupLocs = new ArrayList<MapLocation>();
 
     private MapLocation hqLoc = null;
+    private MapLocation soupDeposit = null;
 
     private static final int DESIRED_FACTORIES = 1;
     private static final int DESIRED_STARPORTS = 1;
+    private static final int DESIRED_REFINERIES = 1;
 	
 	private static final int DISTANCE_TO_BUILD = 15; // Change to make buildings further from base
 	private static final int BUILD_STARPORT = 200;
@@ -29,16 +32,16 @@ public class MinerBot extends GameRobot {
     protected void init(int turn) throws GameActionException{
 		constructor_bot = turn == 2;
 		System.out.println("I am a " + (constructor_bot?"Constructor":"Miner"));
-        return; // nothing to init
+        return;
     }
 
     @Override
     public void loop(int turn) throws GameActionException {
-        if(hqLoc == null){
-            hqLoc = radio.getHQLoc();
-        }
-        factoryCount = radio.updateFactoryCount(factoryCount);
-        starportCount = radio.updateStarportCount(starportCount);
+        if(hqLoc == null) hqLoc = radio.getHQLoc();
+        if(soupDeposit == null) soupDeposit = hqLoc;
+        if(soupDeposit == hqLoc) soupDeposit = radio.getRefineryLoc();
+        //factoryCount = radio.updateFactoryCount(factoryCount);
+        //starportCount = radio.updateStarportCount(starportCount);
         radio.updateSoupLoc(soupLocs);
 
         System.out.println("F: " + factoryCount + "; S: " + starportCount);
@@ -62,33 +65,38 @@ public class MinerBot extends GameRobot {
         }
 
         // build necessary units
-        if(factoryCount < DESIRED_FACTORIES && constructor_bot){
-			if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD) {
-				if(build(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(hqLoc).opposite())){
-					radio.sendFactoryCt(++factoryCount);
-				}
-			} else if(rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost){
-				int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/6:-rc.getMapHeight()/6;
-				path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
-			}
-        } else if(starportCount < DESIRED_STARPORTS && constructor_bot && turn >= BUILD_STARPORT){
-			if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD){
-				if(build(RobotType.FULFILLMENT_CENTER, rc.getLocation().directionTo(hqLoc).opposite())){
-					radio.sendStarportCt(++starportCount);
-				}
-			} else if(rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost){
-				int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/4:-rc.getMapHeight()/4;
-				path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
-			}
+//        if(factoryCount < DESIRED_FACTORIES && constructor_bot){
+//			if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD) {
+//				if(build(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(hqLoc).opposite())){
+//					radio.sendFactoryCt(++factoryCount);
+//				}
+//			} else if(rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost){
+//				int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/6:-rc.getMapHeight()/6;
+//				path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
+//			}
+//        } else if(starportCount < DESIRED_STARPORTS && constructor_bot && turn >= BUILD_STARPORT){
+//			if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD){
+//				if(build(RobotType.FULFILLMENT_CENTER, rc.getLocation().directionTo(hqLoc).opposite())){
+//					radio.sendStarportCt(++starportCount);
+//				}
+//			} else if(rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost){
+//				int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/4:-rc.getMapHeight()/4;
+//				path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
+//			}
+//        }
+
+        if(constructor_bot){
+            construct(turn);
         }
 		
 		if(turn >= MAKE_WALL) { //Get out of the way
-			rc.disintegrate(); //I meant it
+		    path.scout();
+			//rc.disintegrate(); //I meant it
 		}
 
         // manage where we're going and what we're doing
         if(rc.getSoupCarrying() >= RobotType.MINER.soupLimit){
-            path.to(hqLoc);
+            path.to(soupDeposit);
         } else if(soupLocs.size() > 0) {
             path.to(soupLocs.get(0));
         } else {
@@ -97,14 +105,46 @@ public class MinerBot extends GameRobot {
                 soupLocs.add(sloc);
                 radio.soupLoc(sloc);
                 path.to(sloc);
-            } else { //TODO: Parth please make the scouting thing better I am sending them away so they don't block
-                //path.scout();
-				int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/2:-rc.getMapHeight()/2;
-				path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
+            } else {
+                path.scout();
+				//int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/2:-rc.getMapHeight()/2;
+				//path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
             }
         }
     }
 
+    private void construct(int turn) throws GameActionException{
+        if(refineryCount < DESIRED_REFINERIES){
+            if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD) {
+                if(build(RobotType.REFINERY, rc.getLocation().directionTo(hqLoc).opposite())){
+                    ++refineryCount;
+                    soupDeposit = rc.getLocation().add(rc.getLocation().directionTo(hqLoc).opposite());
+                }
+            } else if(rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost){
+                int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/6:-rc.getMapHeight()/6;
+                path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
+            }
+        }
+        if(factoryCount < DESIRED_FACTORIES){
+            if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD) {
+                if(build(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(hqLoc).opposite())){
+                    ++factoryCount;
+                }
+            } else if(rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost){
+                int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/6:-rc.getMapHeight()/6;
+                path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
+            }
+        } else if(starportCount < DESIRED_STARPORTS && turn >= BUILD_STARPORT){
+            if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD){
+                if(build(RobotType.FULFILLMENT_CENTER, rc.getLocation().directionTo(hqLoc).opposite())){
+                    ++starportCount;
+                }
+            } else if(rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost){
+                int y_off = rc.getMapHeight() / 2 >= hqLoc.y?rc.getMapHeight()/4:-rc.getMapHeight()/4;
+                path.to(new MapLocation(hqLoc.x + 0, hqLoc.y + y_off));
+            }
+        }
+    }
 
     private void targetSoup() throws GameActionException{
         MapLocation target;

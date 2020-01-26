@@ -44,19 +44,13 @@ public class LandscaperBot extends GameRobot {
 
     @Override
     public void loop(int turn) throws GameActionException {
-        if(hqLoc == null){
-            hqLoc = radio.getHQLoc();
-        }
-		
+        if(hqLoc == null) hqLoc = radio.getHQLoc();
+        if(hqLoc == null) return; // can't do anything without this. be obvious about being broke.
 		if(wall_locs.size() == 0) wall_locs = path.offsetsToLocations(POSITION_OFFSETS, hqLoc);
-		if(wall_locs.size() == 1) path.to(wall_locs.get(0)); //remove this when parths pathfinding works
-		if(wall_locs.size() == 1 && rc.getLocation().equals(wall_locs.get(0))) {
-			wall_locs.remove(0);
-			in_place = true;
-		}
-		if(!in_place) in_place = path.assimilate(wall_locs, hqLoc);
-		
-		if(in_place && hqLoc != null) {
+
+		if(!in_place) {
+			in_place = path.assimilate(wall_locs, hqLoc);
+		} else {
 			for(int[] offset : DIG_OFFSETS) {
 				MapLocation dig_check = new MapLocation(hqLoc.x + offset[0], hqLoc.y + offset[1]);
 				if(rc.getLocation().isAdjacentTo(dig_check)) {
