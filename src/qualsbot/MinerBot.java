@@ -91,7 +91,7 @@ public class MinerBot extends GameRobot {
                 radio.soupLoc(sloc);
                 path.to(sloc);
             } else {
-                path.move(path.randomDir());
+                path.scout();
             }
         }
     }

@@ -1,6 +1,7 @@
 package qualsbot;
 
 import battlecode.common.*;
+import javafx.beans.property.MapProperty;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -113,6 +114,7 @@ public class Pathfinder {
      * @return an array of every square in our radius
      */
     private MapLocation[] allSpacesInRadius(int r){
+        r = (int)Math.sqrt(r);
         int max_x = rc.getLocation().x + r;
         int min_x = rc.getLocation().x - r;
         int max_y = rc.getLocation().y + r;
@@ -133,16 +135,6 @@ public class Pathfinder {
         return locs.toArray(new MapLocation[locs.size()]);
     }
 
-    /**
-     * get all spaces r distancesq away
-     * @param r radius of circle in distancesq
-     * @return all squares in that distance
-     */
-    private MapLocation[] quickScanRadius(int r){
-        //TODO
-        return null;
-    }
-
     public MapLocation findSoup() throws GameActionException{
         for(MapLocation square : allSpacesInRadius()){
             if(rc.senseSoup(square) > 0) return square;
@@ -150,11 +142,27 @@ public class Pathfinder {
         return null;
     }
 
+    public ArrayList<MapLocation> offsetsToLocations(int[][] offsets, MapLocation center){
+        if(center == null) return null; // can't do anything without relative location
+        ArrayList<MapLocation> buildPath = new ArrayList<>();
+        int cx = center.x; // center x
+        int cy = center.y; // center y
+        int mx = rc.getMapHeight()-1; // max x
+        int my = rc.getMapWidth()-1; // max y
+        for(int[] offset : offsets){
+            int x = cx + offset[0];
+            int y = cy + offset[1];
+            if(x > mx || y > my || x < 0 || y < 0) continue; // throw out impossible spaces
+            buildPath.add(new MapLocation(x,y));
+        }
+        return buildPath;
+    }
+
     /**
      * work on creating a structure collaboratively
      * @param structure spaces that need to be filled, in order of what needs to be filled first
      * @param fallback location to path to if all the spaces are filled
-     * @return true if the structure is done, false otherwise
+     * @return true if we become part of the structure, false otherwise
      */
     public boolean assimilate(ArrayList<MapLocation> structure, MapLocation fallback) throws GameActionException {
         MapLocation targetPost = fallback;
