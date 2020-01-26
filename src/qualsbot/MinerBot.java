@@ -15,6 +15,9 @@ public class MinerBot extends GameRobot {
     private static final int DESIRED_FACTORIES = 1;
     private static final int DESIRED_STARPORTS = 1;
 	
+	private static final int DISTANCE_TO_BUILD = 15; // Change to make buildings further from base
+	private static final int BUILD_STARPORT = 200;
+	
 	private boolean constructor_bot;
 
     public MinerBot(RobotController rc) throws GameActionException {
@@ -59,17 +62,21 @@ public class MinerBot extends GameRobot {
 
         // build necessary units
         if(factoryCount < DESIRED_FACTORIES && constructor_bot){
-			if(rc.getLocation().distanceSquaredTo(hqLoc) >= 9) {
-				if(build(RobotType.DESIGN_SCHOOL, path.randomDir())){
+			if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD) {
+				if(build(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(hqLoc).opposite())){
 					radio.sendFactoryCt(++factoryCount);
 				}
-			} else {
+			} else if(rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost){
 				path.to(rc.getLocation().directionTo(hqLoc).opposite());
 			}
-        } else if(starportCount < DESIRED_STARPORTS && constructor_bot){
-            if(build(RobotType.FULFILLMENT_CENTER, path.randomDir())){
-                radio.sendStarportCt(++starportCount);
-            }
+        } else if(starportCount < DESIRED_STARPORTS && constructor_bot && turn >= BUILD_STARPORT){
+			if(rc.getLocation().distanceSquaredTo(hqLoc) >= DISTANCE_TO_BUILD){
+				if(build(RobotType.FULFILLMENT_CENTER, rc.getLocation().directionTo(hqLoc).opposite())){
+					radio.sendStarportCt(++starportCount);
+				}
+			} else if(rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost){
+				path.to(rc.getLocation().directionTo(hqLoc).opposite());
+			}
         }
 
         // manage where we're going and what we're doing

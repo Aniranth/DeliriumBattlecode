@@ -7,7 +7,7 @@ import battlecode.common.RobotType;
 public class FactoryBot extends GameRobot {
 
     // keep in mind this is PER FACTORY
-    private static final int DESIRED_LANDSCAPERS = 5;
+    private static final int DESIRED_LANDSCAPERS = 8;
 
     private int lsCount = 0;
 
