@@ -25,6 +25,7 @@ public class NetBot extends GameRobot {
         for(RobotInfo i : scan){
             if(rc.canShootUnit(i.getID())) targets.add(i);
         }
+        if(targets.size() < 1) return; // no targets, leave
         RobotInfo target = targets.get(0);
         int minDistSq = rc.getLocation().distanceSquaredTo(target.getLocation());
         for(RobotInfo option : targets){

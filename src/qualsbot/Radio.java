@@ -17,7 +17,7 @@ public class Radio {
      * hopefully it confuses our opponents
      */
     private int[] message;
-    private int bid = 4;
+    private int bid = 2;
 
     /**
      * inits this radio
@@ -66,6 +66,7 @@ public class Radio {
     private static final int SOUP_LOC = 2;
     private static final int FACTORY_CT = 3;
     private static final int STARPORT_CT = 4;
+    //private static final
 
     /* ********
      * Methods for writing to the blockchain
