@@ -1,10 +1,8 @@
 package qualsbot;
 
 import battlecode.common.*;
-import javafx.beans.property.MapProperty;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * class for moving around the map
@@ -185,6 +183,12 @@ public class Pathfinder {
             return true; // we are in the right place!
         }
         return false;
+    }
+
+    public boolean awayFrom(MapLocation ref, int distancesq){
+        int currentDistance = rc.getLocation().distanceSquaredTo(ref);
+        if(currentDistance >= distancesq) return true;
+        return false;//TODO
     }
 
     public Direction randomDir(){
