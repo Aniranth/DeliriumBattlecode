@@ -1,4 +1,4 @@
-package qualsbot2;
+package qualsbot;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
@@ -157,7 +157,7 @@ public class LandscaperBot extends GameRobot {
     /**
      * make the island!
      */
-    private void buildIsland() throws GameActionException { //TODONE landscaper kinda just stands there confused, in Awe of the sheer power of ISLAND
+    private void buildIsland() throws GameActionException { //TODO landscaper kinda just stands there confused, in Awe of the sheer power of ISLAND
         System.out.println("Praise Island!");
         if(islandLoc == null){
             islandLoc = path.findSpotForIsland(hqLoc, ISLAND_DISTANCE);
@@ -179,15 +179,12 @@ public class LandscaperBot extends GameRobot {
                     }
                 }
                 if(allDone){
-                    System.out.println("All done"); // TODO WHY WON'T YOU DIEEEEEEE
                     radio.islandLoc(islandLoc);
-                    path.moveUnsafe(Direction.NORTHEAST);
-//                    if(radio.listenMinerSafeSignal()){
-//                        System.out.println("I heard you");
-//                        path.moveUnsafe(Direction.NORTHWEST);
-//                    } else {
-//                        dump(Direction.NORTHWEST);
-//                    }
+                    if(radio.listenMinerSafeSignal()){
+                        rc.move(Direction.NORTHWEST); // we have served a valiant life; end ourselves.
+                    } else {
+                        dump(Direction.NORTHWEST);
+                    }
                 }
             }
 
