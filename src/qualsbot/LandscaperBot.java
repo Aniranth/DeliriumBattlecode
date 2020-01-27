@@ -65,6 +65,7 @@ public class LandscaperBot extends GameRobot {
         if ((hqLoc = radio.getHQLoc()) != null) {
             wallLocs = path.offsetsToLocations(INNER_WALL_OFFSETS, hqLoc);
             digLocs = path.offsetsToLocations(DIG_OFFSETS, hqLoc);
+			path.updateBlacklist(digLocs);
         }
     }
 
