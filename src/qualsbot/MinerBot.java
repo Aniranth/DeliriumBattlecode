@@ -40,19 +40,21 @@ public class MinerBot extends GameRobot {
     @Override
     public void loop(int turn) throws GameActionException {
         if(hqLoc == null) hqLoc = radio.getHQLoc();
-        if(soupDeposit == null || soupDeposit.equals(hqLoc)) soupDeposit = radio.getRefineryLoc(hqLoc);
+//        if(soupDeposit == null || soupDeposit.equals(hqLoc)) soupDeposit = radio.getRefineryLoc(hqLoc);
+        if(soupDeposit == null) soupDeposit = hqLoc;
         radio.updateSoupLoc(soupLocs);
 
         targetSoup();
 
         // mine around us
         for(Direction dir : Pathfinder.directions){
-            if(mine(dir)){
+            if(mine(dir)) {
                 MapLocation sloc = rc.getLocation().add(dir);
-                if(!soupLocs.contains(sloc)){
-                    soupLocs.add(sloc);
+                if (!soupLocs.contains(sloc)) {
+                    soupLocs.add(0, sloc);
                     radio.soupLoc(sloc);
                 }
+                // check for nearby refinery
             }
         }
 
@@ -68,14 +70,12 @@ public class MinerBot extends GameRobot {
 
         if(constructor_bot && construct(turn)) return; // if we built, focus on that
 
-		
-//		if(turn >= MAKE_WALL) { //Get out of the way
-//		    path.scout();
-//			//rc.disintegrate(); //I meant it
-//		}
-
         // manage where we're going and what we're doing
         if(rc.getSoupCarrying() >= RobotType.MINER.soupLimit){
+            if (rc.getLocation().distanceSquaredTo(hqLoc) > DISTANCE_TO_BUILD) { // if we're mining away from home
+                System.out.println("got here");
+                findOrMakeNearbyRefinery();
+            }
             // System.out.println("I want to deposit");
             path.to(soupDeposit);
         } else if(soupLocs.size() > 0) {
@@ -92,6 +92,19 @@ public class MinerBot extends GameRobot {
                 path.scout();
             }
         }
+    }
+
+    private void findOrMakeNearbyRefinery() throws GameActionException {
+        RobotInfo[] scan = rc.senseNearbyRobots(rc.getCurrentSensorRadiusSquared(), rc.getTeam());
+        boolean refineryNearby = false;
+        for (RobotInfo i : scan) {
+            if (i.getType().equals(RobotType.REFINERY)) {
+                refineryNearby = true;
+                soupDeposit = i.getLocation();
+                break;
+            }
+        }
+        if (!refineryNearby) build(RobotType.REFINERY, rc.getLocation().directionTo(hqLoc).opposite());
     }
 
     /**
