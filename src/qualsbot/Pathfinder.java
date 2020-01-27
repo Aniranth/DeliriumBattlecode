@@ -2,7 +2,31 @@ package qualsbot;
 
 import battlecode.common.*;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+
+class MemoryQueue{
+    private ArrayList<MapLocation> q;
+    private int cap;
+
+    public MemoryQueue(int s){
+        if(s <= 0) throw new IllegalArgumentException("Must have memory > 0");
+        q = new ArrayList<>();
+        cap = s;
+    }
+
+    public void add(MapLocation m){
+        // if we're full, delete old memory
+        while(q.size() >= cap) {
+            q.remove(0);
+        }
+        q.add(m);
+    }
+
+    public boolean contains(MapLocation m){
+        return q.contains(m);
+    }
+}
 
 /**
  * class for moving around the map
@@ -10,10 +34,10 @@ import java.util.ArrayList;
 public class Pathfinder {
     private RobotController rc;
 	
-	private static final int SPACE_MEMORY = 7;
+	private static final int SPACE_MEMORY = 20;
 
     private Direction scoutDir;
-	private ArrayList<MapLocation> prev_loc = new ArrayList<>();
+	private MemoryQueue memory = new MemoryQueue(SPACE_MEMORY);
 
     static Direction[] directions = {
             Direction.NORTH,
@@ -73,6 +97,15 @@ public class Pathfinder {
         // we are trapped :c
     }
 
+    private Direction[] directionsToTry(Direction dir){
+        return new Direction[]{
+                dir, dir.rotateLeft(), dir.rotateRight(),
+                dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(),
+                dir.rotateLeft().rotateLeft().rotateLeft(), dir.rotateRight().rotateRight().rotateRight(),
+                dir.opposite()
+        };
+    }
+
     /**
      * pathfinding (currently lifted straight from lecturebot)
      * @param loc location to move to
@@ -80,32 +113,38 @@ public class Pathfinder {
      */
     public boolean to(MapLocation loc) throws GameActionException {
         if(loc == null) return false;
-        return to(rc.getLocation().directionTo(loc));
-    }
-
-    /**
-     * pathfinding (currently lifted straight from lecturebot)
-     * @param dir direction to move towards
-     * @return true if we move, false otherwise
-     */
-    public boolean to(Direction dir) throws GameActionException{
-        if(dir == null) return false;
-        Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(),
-                dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
-        for (MapLocation prev : prev_loc){
-			for (Direction d : toTry){
-				if(!rc.getLocation().add(d).equals(prev)){
-					if(move(d)) {
-						prev_loc.add(rc.getLocation().add(d));
-						if(prev_loc.size() >= SPACE_MEMORY)
-							prev_loc.remove(0);
-						return true;
-					}
-				}
-			}
+        memory.add(rc.getLocation());
+        Direction targetDir = rc.getLocation().directionTo(loc);
+        for(Direction dir : directionsToTry(targetDir)){
+            MapLocation result = rc.getLocation().add(dir);
+            if(!memory.contains(result) && move(dir)) return true;
         }
         return false;
     }
+
+//    /** DEPRECIATED
+//     * pathfinding (currently lifted straight from lecturebot)
+//     * @param dir direction to move towards
+//     * @return true if we move, false otherwise
+//     */
+//    public boolean to(Direction dir) throws GameActionException{
+//        if(dir == null) return false;
+//        Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(),
+//                dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+//        for (MapLocation prev : prev_loc){
+//			for (Direction d : toTry){
+//				if(!rc.getLocation().add(d).equals(prev)){
+//					if(move(d)) {
+//						prev_loc.add(rc.getLocation().add(d));
+//						if(prev_loc.size() >= SPACE_MEMORY)
+//							prev_loc.remove(0);
+//						return true;
+//					}
+//				}
+//			}
+//        }
+//        return false;
+//    }
 
     private MapLocation[] allSpacesInRadius(){
         return allSpacesInRadius(rc.getCurrentSensorRadiusSquared());

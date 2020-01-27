@@ -141,7 +141,7 @@ public abstract class GameRobot {
      * overload to change location to dir
      */
     protected boolean dig(MapLocation m) throws GameActionException{
-        return dig(rc.getLocation().directionTo(m));
+        return rc.getLocation().isAdjacentTo(m) && dig(rc.getLocation().directionTo(m));
     }
 
     /**
@@ -160,6 +160,6 @@ public abstract class GameRobot {
      * overload to change location to dir
      */
     protected boolean dump(MapLocation m) throws GameActionException{
-        return dump(rc.getLocation().directionTo(m));
+        return rc.getLocation().isAdjacentTo(m) && dump(rc.getLocation().directionTo(m));
     }
 }

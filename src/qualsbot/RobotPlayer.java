@@ -25,9 +25,9 @@ public class RobotPlayer {
         }
         while(r != null) {
             try {
-                System.out.println("running");
+                // System.out.println("running");
                 r.loop(turnCount++);
-                System.out.println("lag: " + (1 + rc.getRoundNum() - turnCount) );
+                // System.out.println("lag: " + (1 + rc.getRoundNum() - turnCount) );
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println("Exception caught: " + e.getMessage());

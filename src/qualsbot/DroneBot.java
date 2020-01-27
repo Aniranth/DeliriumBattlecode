@@ -60,7 +60,7 @@ public class DroneBot extends GameRobot {
             inWall = path.assimilate(buildPath, hqLoc);
         } else {
             // TODO await orders from HQ
-            System.out.println("Awaiting Orders");
+            // System.out.println("Awaiting Orders");
             return;
         }
     }
