@@ -179,9 +179,13 @@ public class LandscaperBot extends GameRobot {
                     }
                 }
                 if(allDone){
-                    System.out.println("All done"); // TODO WHY WON'T YOU DIEEEEEEE
+                    System.out.println(rc.canMove(Direction.WEST)); // TODO WHY WON'T YOU DIEEEEEEE
                     radio.islandLoc(islandLoc);
-                    path.moveUnsafe(Direction.NORTHEAST);
+                    // ok the code below is REALLY BAD HOLY SHIT but I was in a rush so fuck you
+                    while(!rc.isReady());
+                    Direction[] dirs = new Direction[]{Direction.WEST, Direction.SOUTH, Direction.NORTH, Direction.EAST};
+                    for(Direction dir : dirs) if(move(dir)) break;
+                    while(true); // just fucking stop
 //                    if(radio.listenMinerSafeSignal()){
 //                        System.out.println("I heard you");
 //                        path.moveUnsafe(Direction.NORTHWEST);

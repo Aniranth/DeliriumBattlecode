@@ -27,7 +27,7 @@ public class StarportBot extends GameRobot {
     public void loop(int turn) throws GameActionException {
         if(droneCount < DESIRED_DRONES && (turn > ENDGAME_TURN || turn % SLOW_FACTOR == 0)){
             if(build(RobotType.DELIVERY_DRONE, path.randomDir())) {
-                if(droneCount++ == 0) radio.sendProphecySignal();
+                if(droneCount++ == 0 && turn < 1000) radio.sendProphecySignal();
             }
         }
     }
