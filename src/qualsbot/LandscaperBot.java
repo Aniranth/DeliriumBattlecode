@@ -12,6 +12,7 @@ public class LandscaperBot extends GameRobot {
 
     private boolean inPlace = false;
     private boolean amOuter = false;
+    private boolean amIsland = false;
     private boolean canYouDigIt = true;
 
     private static ArrayList<MapLocation> digLocs = new ArrayList<>();
@@ -56,6 +57,9 @@ public class LandscaperBot extends GameRobot {
             new int[]{-1,2}
     };
 
+    public static final int ISLAND_HEIGHT = 50; // desired island plateau height
+    private static final int ISLAND_DISTANCE = 18; // how far the island must be
+
     public LandscaperBot(RobotController rc) throws GameActionException {
         super(rc);
     }
@@ -76,6 +80,10 @@ public class LandscaperBot extends GameRobot {
             if (hqLoc == null) return; // can't do anything without this. be obvious about being broke.
         }
 
+        if(amIsland){
+            buildIsland();
+            return; // the rest of the code in loop does not apply to you
+        }
 
         if (!inPlace) {
             inPlace = path.assimilate(amOuter? supportLocs : wallLocs, hqLoc);
@@ -83,6 +91,12 @@ public class LandscaperBot extends GameRobot {
                 wallLocs = path.offsetsToLocations(INNER_WALL_OFFSETS, hqLoc);
                 supportLocs = path.offsetsToLocations(OUTER_WALL_OFFSETS, hqLoc);
                 amOuter = true;
+            }
+            if(amOuter && supportLocs.size() < 1){
+                amIsland = true;
+                path.addBadSpaces(path.offsetsToLocations(OUTER_WALL_OFFSETS, hqLoc));
+                addIslandSinks();
+                buildIsland();
             }
         } else {
             // choose a spot to dig
@@ -124,5 +138,54 @@ public class LandscaperBot extends GameRobot {
 
             canYouDigIt = !(rc.getDirtCarrying() >= 1);
         }
+    }
+
+    private boolean validIslandLoc(MapLocation m){
+        return !(rc.getLocation().x % 2 == 1 && rc.getLocation().y % 2 == 1);
+    }
+
+    private void addIslandSinks() {
+        for(int x = 1; x < rc.getMapWidth(); x+=2){
+            for(int y = 1; y < rc.getMapHeight(); y+=2){
+                path.addBadSpace(new MapLocation(x,y));
+            }
+        }
+    }
+
+    /**
+     * make the island!
+     */
+    private void buildIsland() throws GameActionException {
+        if (path.awayFrom(hqLoc, ISLAND_DISTANCE)) {
+            // we are far enough away
+            if (canYouDigIt) {
+                Direction digDir;
+                if(rc.getLocation().x % 2 == 0){
+                    digDir = Direction.NORTHWEST;
+                } else {
+                    digDir = Direction.NORTH;
+                }
+                dig(digDir);
+            } else {
+                if (rc.senseElevation(rc.getLocation()) < ISLAND_HEIGHT) {
+                    if(validIslandLoc(rc.getLocation())) {
+                        dump(rc.getLocation());
+                    } else {
+                        move(path.randomDir()); // get onto an island-worthy space
+                    }
+                } else {
+                    // we are on the island! assimilate more land.
+                    Direction buildDir = path.dirTo(hqLoc);
+                    if(rc.senseElevation(rc.getLocation().add(buildDir)) >= ISLAND_HEIGHT){
+                        path.to(hqLoc);
+                    } else {
+                        dump(buildDir);
+                    }
+                }
+            }
+        }
+
+
+        canYouDigIt = !(rc.getDirtCarrying() >= 1);
     }
 }

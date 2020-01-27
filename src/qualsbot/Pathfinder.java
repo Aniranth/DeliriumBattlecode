@@ -133,6 +133,19 @@ public class Pathfinder {
         return false;
     }
 
+    /**
+     * @returns the direction to @param target subject to our movement restrictions
+     */
+    public Direction dirTo(MapLocation target) throws GameActionException {
+        if(target == null) return null;
+        Direction targetDir = rc.getLocation().directionTo(target);
+        for(Direction dir : directionsToTry(targetDir)){
+            MapLocation result = rc.getLocation().add(dir);
+            if(!memory.contains(result) && !badSpaces.contains(result) && rc.canMove(dir)) return dir;
+        }
+        return null;
+    }
+
 //    /** DEPRECIATED
 //     * pathfinding (currently lifted straight from lecturebot)
 //     * @param dir direction to move towards

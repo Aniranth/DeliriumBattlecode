@@ -44,6 +44,9 @@ public abstract class GameRobot {
     // Below are pathfinder methods that are brought here for nicety's sake
 
 
+    protected boolean move(Direction dir) throws GameActionException {
+        return path.move(dir);
+    }
 
     protected boolean build(RobotType type, Direction dir) throws GameActionException {
         return path.build(type,dir);

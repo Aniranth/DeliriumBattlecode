@@ -82,6 +82,17 @@ public class Radio {
         message[RAND] = TEAM_IDENTIFIER - partialMsgSum;
     }
 
+    public void sendEndgameSignal() throws GameActionException {
+        message[MSG_TYPE] = WALL_SET;
+        bid();
+    }
+
+    public void sendPullbackSignal(int unitID) throws GameActionException{
+        message[MSG_TYPE] = BAIT;
+        message[MISC] = unitID;
+        bid();
+    }
+
     /**
      * adds a location to message
      * @param loc location to add
@@ -215,6 +226,33 @@ public class Radio {
             }
         }
         return null;
+    }
+
+    /**
+     * checks if we got a signal that the wall is built last round
+     * @return true if we received said signal, false otherwise
+     */
+    public boolean checkEndgameSignal() throws GameActionException {
+        for(Transaction t : rc.getBlock(rc.getRoundNum() - 1)) {
+            int[] m = decode(t.getMessage());
+            if(fromUs(m) && m[MSG_TYPE] == WALL_SET){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return true if we were ordered to pull back, false otherwise
+     */
+    public boolean listenPullbackSignal() throws GameActionException {
+        for(Transaction t : rc.getBlock(rc.getRoundNum() - 1)) {
+            int[] m = decode(t.getMessage());
+            if(fromUs(m) && m[MSG_TYPE] == BAIT && m[MISC] == rc.getID()){
+                return true;
+            }
+        }
+        return false;
     }
 
     public void updateSoupLoc(ArrayList<MapLocation> sloc) throws GameActionException{
