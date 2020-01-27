@@ -9,8 +9,11 @@ import java.util.ArrayList;
  */
 public class Pathfinder {
     private RobotController rc;
+	
+	private static final int SPACE_MEMORY = 7;
 
     private Direction scoutDir;
+	private ArrayList<MapLocation> prev_loc = new ArrayList<>();
 
     static Direction[] directions = {
             Direction.NORTH,
@@ -89,9 +92,17 @@ public class Pathfinder {
         if(dir == null) return false;
         Direction[] toTry = {dir, dir.rotateLeft(), dir.rotateRight(),
                 dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
-        for (Direction d : toTry){
-            if(move(d))
-                return true;
+        for (MapLocation prev : prev_loc){
+			for (Direction d : toTry){
+				if(!rc.getLocation().add(d).equals(prev)){
+					if(move(d)) {
+						prev_loc.add(rc.getLocation().add(d));
+						if(prev_loc.size() >= SPACE_MEMORY)
+							prev_loc.remove(0);
+						return true;
+					}
+				}
+			}
         }
         return false;
     }
