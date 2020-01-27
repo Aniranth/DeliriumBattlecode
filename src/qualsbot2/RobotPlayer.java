@@ -1,4 +1,4 @@
-package qualsbot;
+package qualsbot2;
 
 
 import battlecode.common.*;
@@ -28,6 +28,7 @@ public class RobotPlayer {
                 // System.out.println("running");
                 r.loop(turnCount++);
                 // System.out.println("lag: " + (1 + rc.getRoundNum() - turnCount) );
+                // System.out.println(Clock.getBytecodesLeft());
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println("Exception caught: " + e.getMessage());

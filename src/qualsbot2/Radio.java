@@ -1,4 +1,4 @@
-package qualsbot;
+package qualsbot2;
 
 import battlecode.common.*;
 
@@ -35,7 +35,7 @@ public class Radio {
     /**
      * team ID can be changed with little to no effect on the code
      */
-    private static final int TEAM_IDENTIFIER = 133769666;
+    private static final int TEAM_IDENTIFIER = 1337696661;
 
     /**
      * UNENCODED MESSAGE FORMAT (we read backwards, 6 to 0):
@@ -69,6 +69,8 @@ public class Radio {
     private static final int ISLAND_LOC = 8;
     private static final int MINER_LOC = 9;
     private static final int MINER_SAFE = 10;
+    private static final int PROPHECY_SIGNAL = 11;
+    private static final int STARPORT_BUILT = 12;
 
     /* ********
      * Methods for writing to the blockchain
@@ -90,8 +92,18 @@ public class Radio {
         bid();
     }
 
+    public void sendStarportBuiltSignal() throws GameActionException {
+        message[MSG_TYPE] = STARPORT_BUILT;
+        bid();
+    }
+
     public void sendMinerSafeSignal() throws GameActionException {
         message[MSG_TYPE] = MINER_SAFE;
+        bid();
+    }
+
+    public void sendProphecySignal() throws GameActionException {
+        message[MSG_TYPE] = PROPHECY_SIGNAL;
         bid();
     }
 
@@ -275,10 +287,30 @@ public class Radio {
         return false;
     }
 
-    public boolean listenMinerSafeSignal() throws GameActionException {
+    public boolean listenStarportBuildSignal() throws GameActionException {
+        for (Transaction t : rc.getBlock(rc.getRoundNum() - 1)) {
+            int[] m = decode(t.getMessage());
+            if (fromUs(m) && m[MSG_TYPE] == STARPORT_BUILT) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+        public boolean listenMinerSafeSignal() throws GameActionException {
         for(Transaction t : rc.getBlock(rc.getRoundNum() - 1)) {
             int[] m = decode(t.getMessage());
             if(fromUs(m) && m[MSG_TYPE] == MINER_SAFE){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean listenProphecySignal() throws GameActionException {
+        for(Transaction t : rc.getBlock(rc.getRoundNum() - 1)) {
+            int[] m = decode(t.getMessage());
+            if(fromUs(m) && m[MSG_TYPE] == PROPHECY_SIGNAL){
                 return true;
             }
         }

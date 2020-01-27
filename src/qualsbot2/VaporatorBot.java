@@ -1,4 +1,4 @@
-package qualsbot;
+package qualsbot2;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;

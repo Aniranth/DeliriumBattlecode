@@ -1,4 +1,4 @@
-package qualsbot;
+package qualsbot2;
 
 import battlecode.common.*;
 
@@ -40,6 +40,9 @@ public class DroneBot extends GameRobot {
     private static ArrayList<MapLocation> buildPath = new ArrayList<>();
 
     private static boolean inWall = false; // am I in formation?
+    private boolean chosen = false;  // do we save the miner?
+    private MapLocation minerLoc = null;
+    private MapLocation islandLoc = null;
 
     public DroneBot(RobotController rc) throws GameActionException {
         super(rc);
@@ -54,14 +57,50 @@ public class DroneBot extends GameRobot {
     public void loop(int turn) throws GameActionException {
         if(hqLoc == null) hqLoc = radio.getHQLoc();
         if(hqLoc == null) return; // if we can't find the HQ, something's gone terribly wrong. Be obvious about it.
+        if(!chosen){
+            chosen = radio.listenProphecySignal();
+            if(chosen) System.out.println("I HAVE BEEN CHOSEN");
+        }
+        if(chosen){
+            fulfillProphecy();
+            return; // we're too important for the wall
+        }
         if(buildPath.size() == 0) buildPath = path.offsetsToLocations(OFFSETS, hqLoc);
 
         if(!inWall){
             inWall = path.assimilate(buildPath, hqLoc);
         } else {
-            // TODO await orders from HQ
-            // System.out.println("Awaiting Orders");
+            if(radio.listenPullbackSignal()){
+                move(rc.getLocation().directionTo(hqLoc));
+            }
+            System.out.println("Awaiting orders");
             return;
+        }
+    }
+
+    private void fulfillProphecy() throws GameActionException {
+        if(islandLoc == null){
+            islandLoc = radio.getIslandLoc();
+        }
+        if(minerLoc == null){
+            minerLoc = radio.getMinerLoc();
+        }
+        if(minerLoc == null && islandLoc == null) path.scout();
+        if(islandLoc != null && rc.isCurrentlyHoldingUnit()){
+            if(!drop(islandLoc)) {
+                path.to(islandLoc.add(Direction.SOUTHWEST));
+            }
+        }
+        if(minerLoc != null){
+            if(rc.getLocation().isAdjacentTo(minerLoc)){
+                RobotInfo miner = null;
+                if((miner = rc.senseRobotAtLocation(minerLoc)) != null){
+                    grab(miner);
+                    radio.sendMinerSafeSignal();
+                }
+            } else {
+                path.to(minerLoc);
+            }
         }
     }
 }

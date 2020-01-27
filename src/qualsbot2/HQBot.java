@@ -1,4 +1,4 @@
-package qualsbot;
+package qualsbot2;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
@@ -7,10 +7,12 @@ import battlecode.common.*;
 
 public class HQBot extends NetBot {
 
-    private static final int DESIRED_MINERS = 3;
+    private static final int DESIRED_MINERS = 4;
 	private boolean endgame = false;
 
     private int minerCount = 0;
+
+    private static final int ENDGAME_LANDSCAPER_COUNT = 10;
 
     public HQBot(RobotController rc) throws GameActionException {
         super(rc);
@@ -36,7 +38,7 @@ public class HQBot extends NetBot {
 				landscaper_count++;
 			}
 		}
-		if(landscaper_count >= 20 && !endgame) {
+		if(landscaper_count >= ENDGAME_LANDSCAPER_COUNT && !endgame) {
 			endgame = true;
 			radio.sendEndgameSignal();
 		}

@@ -1,4 +1,4 @@
-package qualsbot;
+package qualsbot2;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
@@ -58,7 +58,7 @@ public class LandscaperBot extends GameRobot {
     };
 
     public static final int ISLAND_HEIGHT = 75; // desired island plateau height
-    private static final int ISLAND_DISTANCE = 18; // how far the island must be
+    private static final int ISLAND_DISTANCE = 25; // how far the island must be
     private static MapLocation islandLoc = null;
     private static ArrayList<MapLocation> islandLocs = new ArrayList<>();
     public static final int[][] ISLAND_OFFSETS = {
@@ -106,6 +106,7 @@ public class LandscaperBot extends GameRobot {
                 System.out.println("I have given myself to the church of Island");
                 amIsland = true;
                 path.addBadSpaces(path.offsetsToLocations(OUTER_WALL_OFFSETS, hqLoc));
+                path.forget();
                 buildIsland();
             }
         } else {
@@ -156,11 +157,12 @@ public class LandscaperBot extends GameRobot {
     /**
      * make the island!
      */
-    private void buildIsland() throws GameActionException { //TODO landscaper kinda just stands there confused, in Awe of the sheer power of ISLAND
+    private void buildIsland() throws GameActionException { //TODONE landscaper kinda just stands there confused, in Awe of the sheer power of ISLAND
         System.out.println("Praise Island!");
-        if(path.awayFrom(hqLoc, ISLAND_DISTANCE)){
-            islandLoc = rc.getLocation();
-            radio.islandLoc(islandLoc);
+        if(islandLoc == null){
+            islandLoc = path.findSpotForIsland(hqLoc, ISLAND_DISTANCE);
+        }
+        if(rc.getLocation().equals(islandLoc)){
             if(islandLocs == null || islandLocs.size() < 1){
                 islandLocs = path.offsetsToLocations(ISLAND_OFFSETS, islandLoc);
             }
@@ -177,11 +179,21 @@ public class LandscaperBot extends GameRobot {
                     }
                 }
                 if(allDone){
-                    dump(Direction.CENTER);
+                    System.out.println("All done");
+                    radio.islandLoc(islandLoc);
+                    path.moveUnsafe(Direction.NORTHEAST);
+//                    if(radio.listenMinerSafeSignal()){
+//                        System.out.println("I heard you");
+//                        path.moveUnsafe(Direction.NORTHWEST);
+//                    } else {
+//                        dump(Direction.NORTHWEST);
+//                    }
                 }
             }
 
             canYouDigIt = !(rc.getDirtCarrying() >= 1);
+        } else {
+            path.to(islandLoc);
         }
     }
 }

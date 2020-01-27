@@ -1,4 +1,4 @@
-package qualsbot;
+package qualsbot2;
 
 import battlecode.common.*;
 
@@ -62,6 +62,10 @@ public abstract class GameRobot {
 
     protected boolean drop(Direction dir) throws GameActionException {
         return path.drop(dir);
+    }
+
+    protected boolean drop(MapLocation m) throws GameActionException {
+        return path.drop(m);
     }
 
     protected boolean refine(Direction dir) throws GameActionException {

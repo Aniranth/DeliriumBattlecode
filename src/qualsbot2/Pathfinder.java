@@ -1,4 +1,4 @@
-package qualsbot;
+package qualsbot2;
 
 import battlecode.common.*;
 
@@ -20,6 +20,10 @@ class MemoryQueue{
             q.remove(0);
         }
         q.add(m);
+    }
+
+    public void forget(){
+        q = new ArrayList<>();
     }
 
     public boolean contains(MapLocation m){
@@ -66,6 +70,14 @@ public class Pathfinder {
         badSpaces.add(m);
     }
 
+    public boolean isBad(MapLocation m){
+        return badSpaces.contains(m);
+    }
+
+    public void forget(){
+        memory.forget();
+    }
+
     /**
      * returns whether the space immediately in the given direction is NOT flooded
      * @param type type of robot (here because sometimes we want to check for someone else)
@@ -94,6 +106,12 @@ public class Pathfinder {
             rc.move(dir);
             return true;
         } else return false;
+    }
+
+    public void moveUnsafe(Direction dir) throws GameActionException {
+        if(rc.isReady() && rc.canMove(dir)){
+            rc.move(dir);
+        }
     }
 
     /**
@@ -269,6 +287,7 @@ public class Pathfinder {
 
     public boolean awayFrom(MapLocation ref, int distancesq) throws GameActionException{
         int currentDistance = rc.getLocation().distanceSquaredTo(ref);
+        //System.out.println(currentDistance + " >= " + distancesq);
         if(currentDistance >= distancesq) return true;
         int approxSpacesAway = (int)Math.sqrt(distancesq);
         Direction bestPath = rc.getLocation().directionTo(ref).opposite();
@@ -278,12 +297,47 @@ public class Pathfinder {
                 target = target.add(bestPath);
             }
             if(isLegal(target)){
+                System.out.println("pathing to " + target);
                 this.to(target);
                 return false;
             }
             bestPath = bestPath.rotateRight();
         }
+        System.out.println("I can't find a path!");
         return false;
+    }
+
+    public boolean validIsland(MapLocation m){
+        if(m == null) return false;
+        int cx = m.x; // center x
+        int cy = m.y; // center y
+        for(int[] offset : LandscaperBot.ISLAND_OFFSETS){
+            int x = cx + offset[0];
+            int y = cy + offset[1];
+            MapLocation location = new MapLocation(x,y);
+            if(!isLegal(location)) return false;
+        }
+        return true;
+    }
+
+    public MapLocation findSpotForIsland(MapLocation ref, int distancesq) throws GameActionException {
+        int currentDistance = rc.getLocation().distanceSquaredTo(ref);
+        if(currentDistance >= distancesq && validIsland(rc.getLocation())) return rc.getLocation();
+        int approxSpacesAway = (int)Math.sqrt(distancesq);
+        Direction bestPath = rc.getLocation().directionTo(ref).opposite();
+        for(int i = 0; i < 7; i++){
+            MapLocation target = ref;
+            for(int j = 0; j < approxSpacesAway; j++){
+                target = target.add(bestPath);
+            }
+            if(validIsland(target)){
+                System.out.println("" + target + " looks like a good spot for an island");
+                return target;
+            }
+            bestPath = bestPath.rotateRight();
+        }
+        System.out.println("ALL IS LOST");
+        return null;
     }
 
     public Direction randomDir(){
@@ -345,6 +399,10 @@ public class Pathfinder {
             rc.dropUnit(dir);
             return true;
         } else return false;
+    }
+
+    public boolean drop(MapLocation m) throws GameActionException {
+        return rc.getLocation().isAdjacentTo(m) && drop(rc.getLocation().directionTo(m));
     }
 
     /**
