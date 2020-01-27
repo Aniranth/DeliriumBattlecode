@@ -37,7 +37,6 @@ public class Pathfinder {
 	private static final int SPACE_MEMORY = 20;
 
     private Direction scoutDir;
-	private ArrayList<MapLocation> movement_blacklist = new ArrayList<>();
 	private MemoryQueue memory = new MemoryQueue(SPACE_MEMORY);
 
     static Direction[] directions = {
@@ -55,14 +54,6 @@ public class Pathfinder {
         rc = rc_param;
         scoutDir = randomDir();
     }
-	
-	    /**
-     * setter for blacklisted spaces
-	 * @param spaces to not travel
-     */
-	public void updateBlacklist(ArrayList<MapLocation> spaces_to_blacklist) {
-		movement_blacklist.addAll(spaces_to_blacklist);
-	}
 
     /**
      * returns whether the space immediately in the given direction is NOT flooded
@@ -88,8 +79,7 @@ public class Pathfinder {
      * @return true if we move; false otherwise.
      */
     public boolean move(Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canMove(dir) && sinkSafe(dir) 
-			&& !movement_blacklist.contains(rc.getLocation().add(dir))) {
+        if (rc.isReady() && rc.canMove(dir) && sinkSafe(dir)) {
             rc.move(dir);
             return true;
         } else return false;
