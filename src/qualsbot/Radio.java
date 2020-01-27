@@ -1,9 +1,6 @@
 package qualsbot;
 
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.Transaction;
+import battlecode.common.*;
 
 import java.util.ArrayList;
 
@@ -113,6 +110,7 @@ public class Radio {
     }
 
     public void refineryLoc(MapLocation loc) throws GameActionException{
+        System.out.println("Sending Refinery Location");
         message[MSG_TYPE] = REFINERY_LOC;
         sendLoc(loc);
         bid();
@@ -136,9 +134,8 @@ public class Radio {
     private void bid() throws GameActionException {
         setSumInt();
         int[] enc_message = encode(message);
-        if(rc.canSubmitTransaction(enc_message, bid)){
-            rc.submitTransaction(enc_message, bid);
-        }
+        while(!rc.canSubmitTransaction(enc_message, bid)) Clock.yield(); // wait until we can send the message
+        rc.submitTransaction(enc_message, bid);
     }
 
     /* ********
@@ -238,7 +235,10 @@ public class Radio {
             int[] m = decode(t.getMessage());
             if(fromUs(m) && m[MSG_TYPE] == msg_type){
                 MapLocation loc_to_add = new MapLocation(m[X], m[Y]);
-                if(!loc.contains(loc_to_add)) loc.add(loc_to_add); //TODO do MapLocations do equality?
+                if(!loc.contains(loc_to_add)) {
+                    System.out.println("adding soup location " + loc_to_add);
+                    loc.add(loc_to_add);
+                }
             }
         }
     }
@@ -251,6 +251,7 @@ public class Radio {
         for(Transaction t : rc.getBlock(rc.getRoundNum() - 1)) {
             int[] m = decode(t.getMessage());
             if(fromUs(m) && m[MSG_TYPE] == msg_type){
+                System.out.println("found location [" + m[X] + ", " + m[Y] +"]");
                 return new MapLocation(m[X], m[Y]);
             }
         }

@@ -17,12 +17,14 @@ public class MinerBot extends GameRobot {
     private static final int DESIRED_FACTORIES = 1;
     private static final int DESIRED_STARPORTS = 1;
     private static final int DESIRED_REFINERIES = 1;
-	
-	private static final int DISTANCE_TO_BUILD = 15; // Change to make buildings further from base
+
+	private static final int FORMATION_THRESHOLD = 18;
+	private static final int DISTANCE_TO_BUILD = 19; // Change to make buildings further from base
 	private static final int BUILD_STARPORT = 400;
 	private static final int MAKE_WALL = 400;
 	
 	private boolean constructor_bot;
+	private boolean fledBase = false;
 
     public MinerBot(RobotController rc) throws GameActionException {
         super(rc);
@@ -54,6 +56,11 @@ public class MinerBot extends GameRobot {
             }
         }
 
+        if(!fledBase && rc.getLocation().distanceSquaredTo(hqLoc) > FORMATION_THRESHOLD){
+            path.addBadSpaces(path.offsetsToLocations(DroneBot.OFFSETS, hqLoc));
+            fledBase = true;
+        }
+
         // refine around us
         for(Direction dir : Pathfinder.directions){
             if(refine(dir)) break;
@@ -67,16 +74,15 @@ public class MinerBot extends GameRobot {
 //			//rc.disintegrate(); //I meant it
 //		}
 
-
         // manage where we're going and what we're doing
         if(rc.getSoupCarrying() >= RobotType.MINER.soupLimit){
-            System.out.println("I want to deposit");
+            // System.out.println("I want to deposit");
             path.to(soupDeposit);
         } else if(soupLocs.size() > 0) {
-            System.out.println("I am going to soup");
+            // System.out.println("I am going to soup");
             path.to(soupLocs.get(0));
         } else {
-            System.out.println("I am searching for soup");
+            // System.out.println("I am searching for soup");
             MapLocation sloc = path.findSoup();
             if(sloc != null && !soupLocs.contains(sloc)){
                 soupLocs.add(sloc);
@@ -102,7 +108,7 @@ public class MinerBot extends GameRobot {
                     if (build(RobotType.REFINERY, d)) {
                         refineryCount++;
                         soupDeposit = rc.getLocation().add(d);
-                        radio.soupLoc(soupDeposit);
+                        radio.refineryLoc(soupDeposit);
                         break;
                     }
                 }

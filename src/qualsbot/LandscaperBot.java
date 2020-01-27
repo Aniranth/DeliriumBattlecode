@@ -15,7 +15,7 @@ public class LandscaperBot extends GameRobot {
     private boolean canYouDigIt = true;
 
     private static ArrayList<MapLocation> digLocs = new ArrayList<>();
-    private static final int[][] DIG_OFFSETS = {
+    public static final int[][] DIG_OFFSETS = {
             new int[]{2, 0},
             new int[]{-2, 0},
             new int[]{0, 2},
@@ -28,7 +28,7 @@ public class LandscaperBot extends GameRobot {
     };
 
     private static ArrayList<MapLocation> wallLocs = new ArrayList<>();
-    private static final int[][] INNER_WALL_OFFSETS = {
+    public static final int[][] INNER_WALL_OFFSETS = {
             new int[]{-1, 1},
             new int[]{0, 1},
             new int[]{1, 1},
@@ -41,7 +41,7 @@ public class LandscaperBot extends GameRobot {
 
     private static final int OUTER_WALL_HEIGHT = 50; // desired height of outer wall before working on inner wall
     private static ArrayList<MapLocation> supportLocs = new ArrayList<>();
-    private static final int[][] OUTER_WALL_OFFSETS = {
+    public static final int[][] OUTER_WALL_OFFSETS = {
             new int[]{1,2},
             new int[]{2,2},
             new int[]{2,1},
@@ -65,6 +65,7 @@ public class LandscaperBot extends GameRobot {
         if ((hqLoc = radio.getHQLoc()) != null) {
             wallLocs = path.offsetsToLocations(INNER_WALL_OFFSETS, hqLoc);
             digLocs = path.offsetsToLocations(DIG_OFFSETS, hqLoc);
+            path.addBadSpaces(digLocs);
         }
     }
 

@@ -2,7 +2,6 @@ package qualsbot;
 
 import battlecode.common.*;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 class MemoryQueue{
@@ -38,6 +37,7 @@ public class Pathfinder {
 
     private Direction scoutDir;
 	private MemoryQueue memory = new MemoryQueue(SPACE_MEMORY);
+	private ArrayList<MapLocation> badSpaces = new ArrayList<>();
 
     static Direction[] directions = {
             Direction.NORTH,
@@ -53,6 +53,17 @@ public class Pathfinder {
     public Pathfinder(RobotController rc_param){
         rc = rc_param;
         scoutDir = randomDir();
+    }
+
+    public void addBadSpaces(ArrayList<MapLocation> spaces){
+        for(MapLocation m : spaces){
+            addBadSpace(m);
+        }
+    }
+
+    public void addBadSpace(MapLocation m){
+        if(badSpaces.contains(m)) return; // don't add the same space twice
+        badSpaces.add(m);
     }
 
     /**
@@ -79,7 +90,7 @@ public class Pathfinder {
      * @return true if we move; false otherwise.
      */
     public boolean move(Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canMove(dir) && sinkSafe(dir)) {
+        if (rc.isReady() && rc.canMove(dir) && sinkSafe(dir) && !badSpaces.contains(rc.getLocation().add(dir))) {
             rc.move(dir);
             return true;
         } else return false;
@@ -264,5 +275,127 @@ public class Pathfinder {
 
     public Direction randomDir(){
         return directions[(int) (Math.random() * directions.length)];
+    }
+
+    /* * * * * * * * * * * * * * * * * * * * * * * * * *
+     * SHARED METHODS BELOW                            *
+     * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+    /**
+     * tries to build a robot in the given direction
+     *
+     * @param type what to build
+     * @param dir  where to build it
+     * @return true if we successfully built it, false otherwise
+     */
+    public boolean build(RobotType type, Direction dir) throws GameActionException {
+        if (rc.isReady() && rc.canBuildRobot(type, dir) && sinkSafe(type, dir)) {
+            rc.buildRobot(type, dir);
+            return true;
+        } else return false;
+    }
+
+    /**
+     * tries to mine soup in the given direction
+     *
+     * @param dir where to mine
+     * @return true if we mined it, false otherwise
+     */
+    public boolean mine(Direction dir) throws GameActionException {
+        if (rc.isReady() && rc.canMineSoup(dir)) {
+            rc.mineSoup(dir);
+            return true;
+        } else return false;
+    }
+
+    /**
+     * tries to pick up a robot
+     *
+     * @param target robot to grab
+     * @return true if we grab it, false otherwise
+     */
+    public boolean grab(RobotInfo target) throws GameActionException {
+        if (rc.isReady() && rc.canPickUpUnit(target.getID())) {
+            rc.pickUpUnit(target.getID());
+            return true;
+        } else return false;
+    }
+
+    /**
+     * tries to drop a robot in the given direction
+     *
+     * @param dir where we droppin
+     * @return true if dropped, false otherwise
+     */
+    public boolean drop(Direction dir) throws GameActionException {
+        if (rc.isReady() && rc.canDropUnit(dir)) {
+            rc.dropUnit(dir);
+            return true;
+        } else return false;
+    }
+
+    /**
+     * tries to refine soup in the given dir
+     *
+     * @param dir where to refine
+     * @return true if we refined, false otherwise
+     */
+    public boolean refine(Direction dir) throws GameActionException {
+        if (rc.isReady() && rc.canDepositSoup(dir)) {
+            rc.depositSoup(dir, rc.getSoupCarrying());
+            return true;
+        } else return false;
+    }
+
+    /**
+     * tries to shoot a unit
+     *
+     * @param target who to shoot
+     * @return true if we shot them, false otherwise
+     */
+    public boolean shoot(RobotInfo target) throws GameActionException {
+        if (rc.isReady() && rc.canShootUnit(target.getID())) {
+            rc.shootUnit(target.getID());
+            return true;
+        } else return false;
+    }
+
+    /**
+     * tries to dig in a direction
+     *
+     * @param dir where to dig
+     * @return true if we dig, false otherwise
+     */
+    public boolean dig(Direction dir) throws GameActionException {
+        if (rc.isReady() && rc.canDigDirt(dir)) {
+            rc.digDirt(dir);
+            return true;
+        } else return false;
+    }
+
+    /**
+     * overload to change location to dir
+     */
+    public boolean dig(MapLocation m) throws GameActionException{
+        return rc.getLocation().isAdjacentTo(m) && dig(rc.getLocation().directionTo(m));
+    }
+
+    /**
+     * tries to dump in a direction
+     * @param dir where to dump
+     * @return true if we dump, false otherwise
+     */
+    public boolean dump(Direction dir) throws GameActionException{
+        if(rc.isReady() && rc.canDepositDirt(dir)){
+            rc.depositDirt(dir);
+            return true;
+        } else return false;
+    }
+
+    /**
+     * overload to change location to dir
+     */
+    public boolean dump(MapLocation m) throws GameActionException{
+        return rc.getLocation().isAdjacentTo(m) && dump(rc.getLocation().directionTo(m));
     }
 }

@@ -9,7 +9,7 @@ public class DroneBot extends GameRobot {
     private static MapLocation hqLoc = null;
 
     // order in which to line up for the WALL
-    private static final int[][] OFFSETS = {
+    public static final int[][] OFFSETS = {
             new int[]{3,3},
             new int[]{3,2},
             new int[]{3,1},

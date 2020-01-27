@@ -9,7 +9,7 @@ import battlecode.common.*;
 public abstract class GameRobot {
 
     /**
-     * robot controller we use for everything
+     * stuff we use for everything
      */
     protected RobotController rc;
     protected Radio radio;
@@ -41,125 +41,47 @@ public abstract class GameRobot {
      */
     abstract void loop(int turn) throws GameActionException;
 
-    /* * * * * * * * * * * * * * * * * * * * * * * * * *
-     * SHARED METHODS BELOW                            *
-     * * * * * * * * * * * * * * * * * * * * * * * * * */
+    // Below are pathfinder methods that are brought here for nicety's sake
 
-    /**
-     * tries to build a robot in the given direction
-     *
-     * @param type what to build
-     * @param dir  where to build it
-     * @return true if we successfully built it, false otherwise
-     */
+
+
     protected boolean build(RobotType type, Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canBuildRobot(type, dir) && path.sinkSafe(type, dir)) {
-            rc.buildRobot(type, dir);
-            return true;
-        } else return false;
+        return path.build(type,dir);
     }
 
-    /**
-     * tries to mine soup in the given direction
-     *
-     * @param dir where to mine
-     * @return true if we mined it, false otherwise
-     */
     protected boolean mine(Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canMineSoup(dir)) {
-            rc.mineSoup(dir);
-            return true;
-        } else return false;
+        return path.mine(dir);
     }
 
-    /**
-     * tries to pick up a robot
-     *
-     * @param target robot to grab
-     * @return true if we grab it, false otherwise
-     */
     protected boolean grab(RobotInfo target) throws GameActionException {
-        if (rc.isReady() && rc.canPickUpUnit(target.getID())) {
-            rc.pickUpUnit(target.getID());
-            return true;
-        } else return false;
+        return path.grab(target);
     }
 
-    /**
-     * tries to drop a robot in the given direction
-     *
-     * @param dir where we droppin
-     * @return true if dropped, false otherwise
-     */
     protected boolean drop(Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canDropUnit(dir)) {
-            rc.dropUnit(dir);
-            return true;
-        } else return false;
+        return path.drop(dir);
     }
 
-    /**
-     * tries to refine soup in the given dir
-     *
-     * @param dir where to refine
-     * @return true if we refined, false otherwise
-     */
     protected boolean refine(Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canDepositSoup(dir)) {
-            rc.depositSoup(dir, rc.getSoupCarrying());
-            return true;
-        } else return false;
+        return path.refine(dir);
     }
 
-    /**
-     * tries to shoot a unit
-     *
-     * @param target who to shoot
-     * @return true if we shot them, false otherwise
-     */
     protected boolean shoot(RobotInfo target) throws GameActionException {
-        if (rc.isReady() && rc.canShootUnit(target.getID())) {
-            rc.shootUnit(target.getID());
-            return true;
-        } else return false;
+        return path.shoot(target);
     }
 
-    /**
-     * tries to dig in a direction
-     *
-     * @param dir where to dig
-     * @return true if we dig, false otherwise
-     */
     protected boolean dig(Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canDigDirt(dir)) {
-            rc.digDirt(dir);
-            return true;
-        } else return false;
+        return path.dig(dir);
     }
 
-    /**
-     * overload to change location to dir
-     */
     protected boolean dig(MapLocation m) throws GameActionException{
-        return rc.getLocation().isAdjacentTo(m) && dig(rc.getLocation().directionTo(m));
+        return path.dig(m);
     }
 
-    /**
-     * tries to dump in a direction
-     * @param dir where to dump
-     * @return true if we dump, false otherwise
-     */
     protected boolean dump(Direction dir) throws GameActionException{
-        if(rc.isReady() && rc.canDepositDirt(dir)){
-            rc.depositDirt(dir);
-            return true;
-        } else return false;
+        return path.dump(dir);
     }
 
-    /**
-     * overload to change location to dir
-     */
     protected boolean dump(MapLocation m) throws GameActionException{
-        return rc.getLocation().isAdjacentTo(m) && dump(rc.getLocation().directionTo(m));
+        return path.dump(m);
     }
 }
