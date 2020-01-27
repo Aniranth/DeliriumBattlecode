@@ -66,6 +66,9 @@ public class Radio {
     private static final int WALL_SET = 5;
     private static final int BAIT = 6; // pull a drone back to bait our opponents
     private static final int REFINERY_LOC = 7;
+    private static final int ISLAND_LOC = 8;
+    private static final int MINER_LOC = 9;
+    private static final int MINER_SAFE = 10;
 
     /* ********
      * Methods for writing to the blockchain
@@ -87,6 +90,11 @@ public class Radio {
         bid();
     }
 
+    public void sendMinerSafeSignal() throws GameActionException {
+        message[MSG_TYPE] = MINER_SAFE;
+        bid();
+    }
+
     public void sendPullbackSignal(int unitID) throws GameActionException{
         message[MSG_TYPE] = BAIT;
         message[MISC] = unitID;
@@ -100,6 +108,18 @@ public class Radio {
     private void sendLoc(MapLocation loc){
         message[X] = loc.x;
         message[Y] = loc.y;
+    }
+
+    public void minerLoc(MapLocation loc) throws GameActionException {
+        message[MSG_TYPE] = MINER_LOC;
+        sendLoc(loc);
+        bid();
+    }
+
+    public void islandLoc(MapLocation loc) throws GameActionException{
+        message[MSG_TYPE] = ISLAND_LOC;
+        sendLoc(loc);
+        bid();
     }
 
     public void HQLoc(MapLocation loc) throws GameActionException{
@@ -255,6 +275,16 @@ public class Radio {
         return false;
     }
 
+    public boolean listenMinerSafeSignal() throws GameActionException {
+        for(Transaction t : rc.getBlock(rc.getRoundNum() - 1)) {
+            int[] m = decode(t.getMessage());
+            if(fromUs(m) && m[MSG_TYPE] == MINER_SAFE){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void updateSoupLoc(ArrayList<MapLocation> sloc) throws GameActionException{
         updateLoc(sloc, SOUP_LOC);
     }
@@ -262,6 +292,8 @@ public class Radio {
     public MapLocation getRefineryLoc(MapLocation def) throws GameActionException{
         return updateLoc(def, REFINERY_LOC);
     }
+
+
 
     /**
      * checks the previous round for updates to location
@@ -281,6 +313,14 @@ public class Radio {
         }
     }
 
+    public MapLocation getIslandLoc() throws GameActionException {
+        return updateLoc((MapLocation)null, ISLAND_LOC);
+    }
+
+    public MapLocation getMinerLoc() throws GameActionException {
+        return updateLoc((MapLocation)null, MINER_LOC);
+    }
+
     /**
      * similar to the above, but only returns one location
      * @param def default location if one is not found
@@ -295,10 +335,6 @@ public class Radio {
         }
         return def;
     }
-
-
-
-
 
     public int updateFactoryCount(int current_count) throws GameActionException{
         return updateCount(current_count, FACTORY_CT);

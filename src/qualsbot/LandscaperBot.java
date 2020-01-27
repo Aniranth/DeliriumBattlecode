@@ -57,11 +57,21 @@ public class LandscaperBot extends GameRobot {
             new int[]{-1,2}
     };
 
-    public static final int ISLAND_HEIGHT = 50; // desired island plateau height
+    public static final int ISLAND_HEIGHT = 75; // desired island plateau height
     private static final int ISLAND_DISTANCE = 18; // how far the island must be
+    private static MapLocation islandLoc = null;
+    private static ArrayList<MapLocation> islandLocs = new ArrayList<>();
+    public static final int[][] ISLAND_OFFSETS = {
+            new int[]{0,0},
+            new int[]{0,1},
+            new int[]{1,0},
+            new int[]{-1,0},
+            new int[]{0,-1}
+    };
 
     public LandscaperBot(RobotController rc) throws GameActionException {
         super(rc);
+        radio.setBid(1); // lowest possible bid
     }
 
     @Override
@@ -93,9 +103,9 @@ public class LandscaperBot extends GameRobot {
                 amOuter = true;
             }
             if(amOuter && supportLocs.size() < 1){
+                System.out.println("I have given myself to the church of Island");
                 amIsland = true;
                 path.addBadSpaces(path.offsetsToLocations(OUTER_WALL_OFFSETS, hqLoc));
-                addIslandSinks();
                 buildIsland();
             }
         } else {
@@ -113,7 +123,6 @@ public class LandscaperBot extends GameRobot {
             dig(hqLoc);
 
             if (canYouDigIt && digLoc != null) {
-                System.out.println("I am digging from " + digLoc);
                 dig(digLoc);
             } else {
                 if(!amOuter || rc.senseElevation(rc.getLocation()) < OUTER_WALL_HEIGHT) {
@@ -123,7 +132,7 @@ public class LandscaperBot extends GameRobot {
                     MapLocation dumpSpot = null;
                     for(int i = 0; i < wallLocs.size(); i++){
                         MapLocation candidate = wallLocs.get(i);
-                        if(!rc.canDepositDirt(rc.getLocation().directionTo(candidate))) {
+                        if(!rc.canSenseLocation(candidate) || !rc.canDepositDirt(rc.getLocation().directionTo(candidate))) {
                             // we only have results in here the first time we iterate through wallLocs
                             wallLocs.remove(i--);
                         } else {
@@ -144,48 +153,35 @@ public class LandscaperBot extends GameRobot {
         return !(rc.getLocation().x % 2 == 1 && rc.getLocation().y % 2 == 1);
     }
 
-    private void addIslandSinks() {
-        for(int x = 1; x < rc.getMapWidth(); x+=2){
-            for(int y = 1; y < rc.getMapHeight(); y+=2){
-                path.addBadSpace(new MapLocation(x,y));
-            }
-        }
-    }
-
     /**
      * make the island!
      */
-    private void buildIsland() throws GameActionException {
-        if (path.awayFrom(hqLoc, ISLAND_DISTANCE)) {
-            // we are far enough away
+    private void buildIsland() throws GameActionException { //TODO landscaper kinda just stands there confused, in Awe of the sheer power of ISLAND
+        System.out.println("Praise Island!");
+        if(path.awayFrom(hqLoc, ISLAND_DISTANCE)){
+            islandLoc = rc.getLocation();
+            radio.islandLoc(islandLoc);
+            if(islandLocs == null || islandLocs.size() < 1){
+                islandLocs = path.offsetsToLocations(ISLAND_OFFSETS, islandLoc);
+            }
+
             if (canYouDigIt) {
-                Direction digDir;
-                if(rc.getLocation().x % 2 == 0){
-                    digDir = Direction.NORTHWEST;
-                } else {
-                    digDir = Direction.NORTH;
-                }
-                dig(digDir);
+                dig(Direction.NORTHWEST);
             } else {
-                if (rc.senseElevation(rc.getLocation()) < ISLAND_HEIGHT) {
-                    if(validIslandLoc(rc.getLocation())) {
-                        dump(rc.getLocation());
-                    } else {
-                        move(path.randomDir()); // get onto an island-worthy space
+                boolean allDone = true;
+                for(MapLocation space : islandLocs){
+                    if(rc.senseElevation(space) < ISLAND_HEIGHT){
+                        dump(space);
+                        allDone = false;
+                        break;
                     }
-                } else {
-                    // we are on the island! assimilate more land.
-                    Direction buildDir = path.dirTo(hqLoc);
-                    if(rc.senseElevation(rc.getLocation().add(buildDir)) >= ISLAND_HEIGHT){
-                        path.to(hqLoc);
-                    } else {
-                        dump(buildDir);
-                    }
+                }
+                if(allDone){
+                    dump(Direction.CENTER);
                 }
             }
+
+            canYouDigIt = !(rc.getDirtCarrying() >= 1);
         }
-
-
-        canYouDigIt = !(rc.getDirtCarrying() >= 1);
     }
 }
