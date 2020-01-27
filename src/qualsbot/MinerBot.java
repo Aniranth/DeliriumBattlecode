@@ -10,6 +10,7 @@ public class MinerBot extends GameRobot {
     private int starportCount = 0;
     private int refineryCount = 0;
     private ArrayList<MapLocation> soupLocs = new ArrayList<MapLocation>();
+	private boolean stay_put = false;
 
     private MapLocation hqLoc = null;
     private MapLocation soupDeposit = null;
@@ -24,6 +25,7 @@ public class MinerBot extends GameRobot {
 	private static final int MAKE_WALL = 400;
 	
 	private boolean constructor_bot;
+	private boolean was_constructor_bot = false;
 	private boolean fledBase = false;
 
     public MinerBot(RobotController rc) throws GameActionException {
@@ -42,6 +44,18 @@ public class MinerBot extends GameRobot {
         if(hqLoc == null) hqLoc = radio.getHQLoc();
 //        if(soupDeposit == null || soupDeposit.equals(hqLoc)) soupDeposit = radio.getRefineryLoc(hqLoc);
         if(soupDeposit == null) soupDeposit = hqLoc;
+		if(was_constructor_bot && radio.checkEndgameSignal()) {
+			//radio.minerLoc();
+			System.out.println("I have requested evac");
+			stay_put = true;
+			return;
+		} else if (stay_put) {
+			System.out.println("I am waiting for evac.");
+			return;
+		}
+		System.out.println(constructor_bot);
+		System.out.println(radio.checkEndgameSignal() && constructor_bot);
+		
         radio.updateSoupLoc(soupLocs);
 
         targetSoup();
@@ -151,6 +165,7 @@ public class MinerBot extends GameRobot {
             }
         } else {
             constructor_bot = false; //  My work here is done
+			was_constructor_bot = true;
         }
         return false;
     }

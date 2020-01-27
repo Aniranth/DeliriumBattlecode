@@ -3,10 +3,12 @@ package qualsbot;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
+import battlecode.common.*;
 
 public class HQBot extends NetBot {
 
     private static final int DESIRED_MINERS = 3;
+	private boolean endgame = false;
 
     private int minerCount = 0;
 
@@ -26,5 +28,17 @@ public class HQBot extends NetBot {
         if(minerCount < DESIRED_MINERS){
             if(build(RobotType.MINER, path.randomDir())) minerCount++;
         }
+		
+		int landscaper_count = 0;
+		
+		for(RobotInfo robot : rc.senseNearbyRobots(8, rc.getTeam())) {
+			if (robot.getType().equals(RobotType.LANDSCAPER)) {
+				landscaper_count++;
+			}
+		}
+		if(landscaper_count >= 20 && !endgame) {
+			endgame = true;
+			radio.sendEndgameSignal();
+		}
     }
 }
