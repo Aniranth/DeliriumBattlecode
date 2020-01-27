@@ -19,7 +19,7 @@ public class MinerBot extends GameRobot {
     private static final int DESIRED_REFINERIES = 1;
 	
 	private static final int DISTANCE_TO_BUILD = 15; // Change to make buildings further from base
-	private static final int BUILD_STARPORT = 200;
+	private static final int BUILD_STARPORT = 400;
 	private static final int MAKE_WALL = 400;
 	
 	private boolean constructor_bot;
